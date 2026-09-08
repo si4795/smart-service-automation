@@ -6,23 +6,25 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import json
-import sys
+from typing import Dict, Any, Optional
 
 BASE_URL = "http://127.0.0.1:5000"
 
-def get(path):
+def get(path: str) -> Dict[str, Any]:
     url = f"{BASE_URL}{path}"
     req = urllib.request.Request(url, headers={"X-Requested-With": "XMLHttpRequest"})
     with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read().decode())
+        parsed: Dict[str, Any] = json.loads(resp.read().decode())
+        return parsed
 
-def post(path, data=None):
+def post(path: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     url = f"{BASE_URL}{path}"
     encoded = urllib.parse.urlencode(data or {}).encode() if data else b""
     req = urllib.request.Request(url, data=encoded, headers={"X-Requested-With": "XMLHttpRequest"})
     try:
         with urllib.request.urlopen(req) as resp:
-            return json.loads(resp.read().decode())
+            parsed: Dict[str, Any] = json.loads(resp.read().decode())
+            return parsed
     except urllib.error.HTTPError as err:
         try:
             body = json.loads(err.read().decode())
@@ -30,7 +32,7 @@ def post(path, data=None):
         except Exception:
             return {"_http_status": err.code, "error": str(err), "success": False}
 
-def main():
+def main() -> None:
     print("=" * 65)
     print("   BAUST CSE FEST 2026 - SMART HOME AUTOMATION PIPELINE TEST   ")
     print("=" * 65)
@@ -41,9 +43,13 @@ def main():
     try:
         post("/api/reset")
         seed = post("/api/seed-demo")
+        assert seed is not None and isinstance(seed, dict)
+
         summary = get("/api/summary")
-        dist = summary.get("status_distribution", {})
-        total_seeded = summary.get("total_bookings", 0)
+        assert summary is not None and isinstance(summary, dict)
+
+        dist: Dict[str, Any] = summary.get("status_distribution", {})
+        total_seeded: int = summary.get("total_bookings", 0)
         status_pass = (total_seeded >= 5 and all(dist.get(s, 0) >= 1 for s in ["Requested", "Accepted", "On the Way", "In Progress", "Completed"]))
         results.append({
             "step": "1. Seed Baseline Demo Data",
@@ -60,7 +66,7 @@ def main():
     # 2. Matching Engine & Urgency Boost Verification
     try:
         from services.mock_db import db
-        from services.matcher import calculate_match_score, rank_providers
+        from services.matcher import calculate_match_score
         prov = db.get_providers("Electrical")[0]
         score_normal, base_norm, boost_norm = calculate_match_score(prov, "Normal")
         score_emerg, base_emerg, boost_emerg = calculate_match_score(prov, "Emergency")
@@ -80,10 +86,9 @@ def main():
         print(f"[FAIL] Step 2: {e}")
 
     # 3. Double-Booking Shield
-    b1 = None
-    booking_id = None
+    b1: Optional[Dict[str, Any]] = None
+    booking_id: Optional[str] = None
     try:
-        # Pick an unbooked slot: 2026-09-08 20:00
         slot = "2026-09-08 20:00"
         prov_id = "prov-plumb-02"
 
@@ -96,7 +101,11 @@ def main():
             "client_phone": "+880 1711-123456",
             "client_address": "Saidpur, Nilphamari"
         })
-        booking_id = b1["booking"]["id"]
+        assert b1 is not None and isinstance(b1, dict)
+        booking_data = b1.get("booking")
+        assert booking_data is not None and isinstance(booking_data, dict)
+        booking_id = str(booking_data.get("id"))
+        assert booking_id is not None
 
         # 2nd booking: attempt collision on the same slot (MUST FAIL with 409)
         b2 = post("/book", {
@@ -107,6 +116,7 @@ def main():
             "client_phone": "+880 1711-654321",
             "client_address": "Saidpur, Nilphamari"
         })
+        assert b2 is not None and isinstance(b2, dict)
         conflict_detected = (b2.get("_http_status") == 409 or not b2.get("success", True))
 
         results.append({
@@ -120,24 +130,34 @@ def main():
         print(f"[FAIL] Step 3: {e}")
 
     # 4. 5-Stage Sequential Lifecycle Transitions
-    curr_b = None
+    curr_b: Optional[Dict[str, Any]] = None
     try:
         stages = ["Accepted", "On the Way", "In Progress", "Completed"]
         transitions_ok = True
-        curr_b = b1["booking"]
+        assert b1 is not None and isinstance(b1, dict)
+        target_booking = b1.get("booking")
+        assert target_booking is not None and isinstance(target_booking, dict)
+        curr_b = target_booking
+        assert booking_id is not None
 
         for next_st in stages:
             enc_st = urllib.parse.quote(next_st)
             res = post(f"/update-status/{booking_id}/{enc_st}")
-            curr_b = res["booking"]
-            if curr_b["status"] != next_st:
+            assert res is not None and isinstance(res, dict)
+            updated_booking = res.get("booking")
+            assert updated_booking is not None and isinstance(updated_booking, dict)
+            curr_b = updated_booking
+
+            if curr_b.get("status") != next_st:
                 transitions_ok = False
                 break
-            print(f"       -> Advanced: [{next_st}] (Total History: {len(curr_b['history'])} events)")
+            hist_list = curr_b.get("history") or []
+            print(f"       -> Advanced: [{next_st}] (Total History: {len(hist_list)} events)")
 
+        assert curr_b is not None and isinstance(curr_b, dict)
         results.append({
             "step": "4. 5-Stage Sequential Progression",
-            "passed": transitions_ok and curr_b["status"] == "Completed",
+            "passed": transitions_ok and (curr_b.get("status") == "Completed"),
             "details": "Pipeline: Requested -> Accepted -> On the Way -> In Progress -> Completed"
         })
         print(f"[PASS] Step 4: 5-Stage Workflow Transitions Verified")
@@ -147,24 +167,36 @@ def main():
 
     # 5. Automated Digital Invoice Payload Verification
     try:
-        inv = curr_b.get("invoice") if curr_b else None
+        assert curr_b is not None and isinstance(curr_b, dict)
+        invoice_data = curr_b.get("invoice")
         inv_ok = False
-        if inv:
+        if invoice_data is not None and isinstance(invoice_data, dict):
+            inv = invoice_data
             has_fields = all(k in inv for k in ["invoice_no", "base_price", "emergency_fee", "platform_fee", "vat", "grand_total"])
-            math_ok = (inv["grand_total"] == round((inv["base_price"] + inv["emergency_fee"] + inv["platform_fee"]) * 1.05, 2))
+            base_price = float(inv.get("base_price", 0.0))
+            emerg_fee = float(inv.get("emergency_fee", 0.0))
+            plat_fee = float(inv.get("platform_fee", 0.0))
+            grand_total = float(inv.get("grand_total", 0.0))
+            vat = float(inv.get("vat", 0.0))
+            expected_total = round((base_price + emerg_fee + plat_fee) * 1.05, 2)
+            math_ok = (grand_total == expected_total)
             inv_ok = has_fields and math_ok
 
-        results.append({
-            "step": "5. Automated Digital Invoice Generation",
-            "passed": inv_ok,
-            "details": f"Invoice No: {inv.get('invoice_no')} | Grand Total: BDT {inv.get('grand_total')} (Base: BDT {inv.get('base_price')}, VAT: BDT {inv.get('vat')})"
-        })
-        print(f"[PASS] Step 5: Digital Invoice Payload Verified")
-        print(f"       - Invoice No:   {inv.get('invoice_no')}")
-        print(f"       - Base Rate:    BDT {inv.get('base_price')}")
-        print(f"       - Platform Fee: BDT {inv.get('platform_fee')}")
-        print(f"       - VAT (5%):     BDT {inv.get('vat')}")
-        print(f"       - Grand Total:  BDT {inv.get('grand_total')}")
+            inv_no_str = str(inv.get("invoice_no", ""))
+            results.append({
+                "step": "5. Automated Digital Invoice Generation",
+                "passed": inv_ok,
+                "details": f"Invoice No: {inv_no_str} | Grand Total: BDT {grand_total} (Base: BDT {base_price}, VAT: BDT {vat})"
+            })
+            print(f"[PASS] Step 5: Digital Invoice Payload Verified")
+            print(f"       - Invoice No:   {inv_no_str}")
+            print(f"       - Base Rate:    BDT {base_price}")
+            print(f"       - Platform Fee: BDT {plat_fee}")
+            print(f"       - VAT (5%):     BDT {vat}")
+            print(f"       - Grand Total:  BDT {grand_total}")
+        else:
+            results.append({"step": "5. Automated Digital Invoice Generation", "passed": False, "details": "Invoice object not found"})
+            print(f"[FAIL] Step 5: Invoice object not found")
     except Exception as e:
         results.append({"step": "5. Automated Digital Invoice Generation", "passed": False, "details": str(e)})
         print(f"[FAIL] Step 5: {e}")
