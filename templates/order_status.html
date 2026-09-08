@@ -53,12 +53,17 @@
     <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
         <div class="relative">
             
+            {% set progress_width = "w-0" %}
+            {% if step_index == 1 %}{% set progress_width = "w-1/4" %}
+            {% elif step_index == 2 %}{% set progress_width = "w-2/4" %}
+            {% elif step_index == 3 %}{% set progress_width = "w-3/4" %}
+            {% elif step_index >= 4 %}{% set progress_width = "w-full" %}
+            {% endif %}
+
             <!-- Progress Line Background -->
             <div class="hidden md:block absolute top-5 left-10 right-10 h-1 bg-slate-800 -z-0">
                 <!-- Active Line Fill -->
-                <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500" 
-                     style="width: {% if step_index == 0 %}0%{% elif step_index == 1 %}25%{% elif step_index == 2 %}50%{% elif step_index == 3 %}75%{% else %}100%{% endif %};">
-                </div>
+                <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500 {{ progress_width }}"></div>
             </div>
 
             <!-- Stepper Items -->
@@ -552,23 +557,26 @@
         scrollChatToBottom();
     });
 
-    setInterval(async () => {
-        try {
-            const res = await fetch(`/orders/{{ booking.id }}/messages`);
-            const data = await res.json();
-            if (res.ok && data.messages) {
-                const container = document.getElementById('chat-messages-container');
-                if (!container) return;
-                const currentCount = container.querySelectorAll('.break-words').length;
-                if (data.messages.length > currentCount) {
-                    for (let i = currentCount; i < data.messages.length; i++) {
-                        appendMessageBubble(data.messages[i]);
+    const activeOrderBookingId = "{{ booking.id }}";
+    if (activeOrderBookingId) {
+        setInterval(async () => {
+            try {
+                const res = await fetch('/orders/' + encodeURIComponent(activeOrderBookingId) + '/messages');
+                const data = await res.json();
+                if (res.ok && data.messages) {
+                    const container = document.getElementById('chat-messages-container');
+                    if (!container) return;
+                    const currentCount = container.querySelectorAll('.break-words').length;
+                    if (data.messages.length > currentCount) {
+                        for (let i = currentCount; i < data.messages.length; i++) {
+                            appendMessageBubble(data.messages[i]);
+                        }
                     }
                 }
+            } catch (e) {
+                // silent polling catch
             }
-        } catch (e) {
-            // silent polling catch
-        }
-    }, 5000);
+        }, 5000);
+    }
 </script>
 {% endblock %}

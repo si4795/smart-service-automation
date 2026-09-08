@@ -1270,8 +1270,17 @@ class Database:
                 ORDER BY id ASC
             """, (str(booking_code),))
             return [dict(row) for row in cursor.fetchall()]
+db: Database = Database()
 
-db = Database()
+__all__ = [
+    "Database",
+    "db",
+    "CATEGORIES",
+    "STATUS_FLOW",
+    "CATEGORY_ALIASES",
+    "CATEGORY_SLUGS",
+    "DB_PATH",
+]
 
 
 if __name__ == "__main__":

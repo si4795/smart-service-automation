@@ -4,7 +4,10 @@ Application routing, authentication, and HTTP handlers for SmartServe platform.
 from functools import wraps
 from typing import Any, Dict, List, Optional, Tuple
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
-from services.mock_db import db, CATEGORIES, STATUS_FLOW, CATEGORY_ALIASES, CATEGORY_SLUGS
+from database import Database, db, CATEGORIES, STATUS_FLOW, CATEGORY_ALIASES, CATEGORY_SLUGS
+
+if db is None:
+    db = Database()
 from services.matcher import rank_providers, auto_assign_emergency
 
 app = Flask(__name__)

@@ -441,25 +441,26 @@
         scrollChatToBottom();
     });
 
-    {% if active_booking %}
-    setInterval(async () => {
-        try {
-            const res = await fetch(`/orders/{{ active_booking.id }}/messages`);
-            const data = await res.json();
-            if (res.ok && data.messages) {
-                const container = document.getElementById('chat-messages-container');
-                if (!container) return;
-                const currentCount = container.querySelectorAll('.break-words').length;
-                if (data.messages.length > currentCount) {
-                    for (let i = currentCount; i < data.messages.length; i++) {
-                        appendMessageBubble(data.messages[i]);
+    const activeTrackingBookingId = "{{ active_booking.id if active_booking else '' }}";
+    if (activeTrackingBookingId) {
+        setInterval(async () => {
+            try {
+                const res = await fetch('/orders/' + encodeURIComponent(activeTrackingBookingId) + '/messages');
+                const data = await res.json();
+                if (res.ok && data.messages) {
+                    const container = document.getElementById('chat-messages-container');
+                    if (!container) return;
+                    const currentCount = container.querySelectorAll('.break-words').length;
+                    if (data.messages.length > currentCount) {
+                        for (let i = currentCount; i < data.messages.length; i++) {
+                            appendMessageBubble(data.messages[i]);
+                        }
                     }
                 }
+            } catch (e) {
+                // silent polling catch
             }
-        } catch (e) {
-            // silent polling catch
-        }
-    }, 5000);
-    {% endif %}
+        }, 5000);
+    }
 </script>
 {% endblock %}
