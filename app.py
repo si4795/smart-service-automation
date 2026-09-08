@@ -50,7 +50,24 @@ def role_required(role: str):
     return decorator
 
 @app.route("/", methods=["GET"])
-def index():
+def landing():
+    """Consumer entry portal and landing page for SmartServe platform."""
+    user = get_current_user()
+    if user:
+        if user.get("role") == "technician":
+            return redirect(url_for("provider"))
+        return redirect(url_for("dashboard"))
+    all_providers = db.get_providers()
+    return render_template(
+        "landing.html",
+        categories=CATEGORIES,
+        total_providers=len(all_providers),
+        providers=all_providers[:6]
+    )
+
+@app.route("/dashboard", methods=["GET"])
+@login_required
+def dashboard():
     """Customer booking portal with dynamic recommendation rankings."""
     selected_category = request.args.get("category", CATEGORIES[0])
     selected_date = request.args.get("date", "2026-09-08")
@@ -81,6 +98,11 @@ def index():
         status_flow=STATUS_FLOW
     )
 
+@app.route("/index", methods=["GET"])
+def index():
+    """Backward compatibility alias pointing to dashboard."""
+    return redirect(url_for("dashboard"))
+
 @app.route("/search", methods=["POST"])
 def search():
     """Handles search form submissions and redirects with filtered query parameters."""
@@ -88,7 +110,7 @@ def search():
     slot_date = request.form.get("slot_date", "2026-09-08")
     slot_time = request.form.get("slot_time", "11:00")
     urgency = request.form.get("urgency", "Normal")
-    return redirect(url_for("index", category=category, date=slot_date, time=slot_time, urgency=urgency))
+    return redirect(url_for("dashboard", category=category, date=slot_date, time=slot_time, urgency=urgency))
 
 @app.route("/book", methods=["POST"])
 def book():
@@ -118,7 +140,7 @@ def book():
                     "error": "Please sign in to confirm your booking.",
                     "require_login": True
                 }), 401
-            return redirect(url_for("login", next=url_for("index")))
+            return redirect(url_for("login", next=url_for("dashboard")))
         if not client_phone:
             client_phone = "+880 1700-000000"
         if not client_address:
@@ -295,7 +317,7 @@ def login():
         session.permanent = True
 
         target_redirect = next_url if (next_url and next_url.startswith("/")) else (
-            url_for("provider") if user["role"] == "technician" else url_for("index")
+            url_for("provider") if user["role"] == "technician" else url_for("dashboard")
         )
 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
@@ -360,7 +382,7 @@ def signup():
         session["user_name"] = user["name"]
         session.permanent = True
 
-        target_redirect = url_for("provider") if user["role"] == "technician" else url_for("index")
+        target_redirect = url_for("provider") if user["role"] == "technician" else url_for("dashboard")
         if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
             return jsonify({"success": True, "redirect": target_redirect, "user": user})
 
@@ -372,7 +394,7 @@ def signup():
 def logout():
     """Terminates session and redirects to homepage."""
     session.clear()
-    return redirect(url_for("index"))
+    return redirect(url_for("landing"))
 
 @app.route("/api/summary", methods=["GET"])
 def api_summary():

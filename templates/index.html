@@ -131,12 +131,28 @@
             <div class="bg-white border {% if loop.first %}border-indigo-600 ring-1 ring-indigo-600/20{% else %}border-zinc-200/80{% endif %} rounded-2xl p-4 flex flex-col justify-between hover:border-zinc-300 hover:shadow-xs transition relative">
                 
                 {% if loop.first %}
-                <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-bl-lg tracking-wider">
+                <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] font-bold uppercase px-2.5 py-0.5 rounded-bl-lg tracking-wider z-10">
                     #1 Recommended
                 </div>
                 {% endif %}
 
                 <div>
+                    <!-- Header with Avatar and Title -->
+                    <div class="flex items-start gap-3 mb-2.5">
+                        <img src="{{ p.avatar_url }}" alt="{{ p.name }}" class="w-11 h-11 rounded-xl object-cover border border-zinc-200 shadow-xs shrink-0">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5">
+                                <h3 class="font-bold text-zinc-900 text-sm leading-snug truncate">{{ p.name }}</h3>
+                                <span class="text-indigo-600 shrink-0" title="Verified Professional">
+                                    <svg class="w-3.5 h-3.5 fill-indigo-600" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-indigo-600 font-medium truncate">{{ p.title }}</p>
+                        </div>
+                    </div>
+
                     <!-- Dynamic Badges -->
                     <div class="flex flex-wrap gap-1 mb-1.5">
                         {% for b in p.dynamic_badges %}
@@ -149,10 +165,6 @@
                             {% endif %}
                         {% endfor %}
                     </div>
-
-                    <!-- Provider Title & Name -->
-                    <h3 class="font-bold text-zinc-900 text-sm leading-snug">{{ p.name }}</h3>
-                    <p class="text-[11px] text-indigo-600 font-medium truncate">{{ p.title }}</p>
 
                     <!-- Location & Proximity -->
                     <p class="text-[11px] text-zinc-500 mt-1 flex items-center gap-1 truncate">
@@ -172,9 +184,9 @@
                             </div>
                         </div>
                         <div class="bg-zinc-50 rounded-lg p-1.5 border border-zinc-200/70">
-                            <div class="text-[9px] text-zinc-400">Jobs</div>
+                            <div class="text-[9px] text-zinc-400">Tasks</div>
                             <div class="font-bold text-zinc-800 text-xs">
-                                {{ p.completed_count }}
+                                {{ p.completed_tasks }}
                             </div>
                         </div>
                         <div class="bg-zinc-50 rounded-lg p-1.5 border border-zinc-200/70">
@@ -186,11 +198,16 @@
                     </div>
                 </div>
 
-                <!-- Card Bottom CTA -->
+                <!-- Card Bottom Actions: View Portfolio & Book Specialist -->
                 <div class="mt-3 pt-2.5 border-t border-zinc-100 flex items-center justify-between gap-2">
-                    <span class="text-[10px] text-zinc-400 font-mono truncate">{{ p.phone }}</span>
-                    <button onclick="openBookingModal('{{ p.id }}', '{{ p.name }}', '{{ p.category }}', '{{ p.price }}', '{{ selected_slot }}', '{{ urgency }}')" class="py-1.5 px-3 rounded-lg font-semibold text-xs bg-zinc-900 hover:bg-zinc-800 text-white transition flex items-center gap-1 shrink-0 shadow-xs">
-                        <span>Book Now</span>
+                    <button type="button" onclick='openPortfolioModal({{ p|tojson }})' class="py-1.5 px-2.5 rounded-lg text-xs font-semibold text-zinc-700 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 transition flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>View Portfolio</span>
+                    </button>
+                    <button type="button" onclick="openBookingModal('{{ p.id }}', '{{ p.name }}', '{{ p.category }}', '{{ p.price }}', '{{ selected_slot }}', '{{ urgency }}')" class="py-1.5 px-3 rounded-lg font-semibold text-xs bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 shrink-0 shadow-xs">
+                        <span>Book Specialist</span>
                         <span>→</span>
                     </button>
                 </div>
@@ -302,10 +319,143 @@
         </form>
     </div>
 </div>
+
+<!-- Rich Photo & Video Portfolio Modal -->
+<div id="portfolio-modal" class="fixed inset-0 z-50 bg-zinc-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white border border-zinc-200 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+        <!-- Header -->
+        <div class="flex items-start justify-between border-b border-zinc-100 pb-4">
+            <div class="flex items-center gap-3.5">
+                <img id="modal-portfolio-avatar" src="" alt="Specialist" class="w-14 h-14 rounded-2xl object-cover border border-zinc-200 shadow-xs shrink-0">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <h3 id="modal-portfolio-name" class="text-base sm:text-lg font-bold text-zinc-900 leading-snug truncate"></h3>
+                        <span class="text-indigo-600 shrink-0" title="Verified Trade Specialist">
+                            <svg class="w-4 h-4 fill-indigo-600" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <p id="modal-portfolio-title" class="text-xs text-indigo-600 font-medium truncate"></p>
+                    <div class="flex items-center gap-2 text-xs text-zinc-500 mt-1">
+                        <span id="modal-portfolio-rating" class="font-bold text-zinc-800 font-mono"></span>
+                        <span>•</span>
+                        <span id="modal-portfolio-tasks" class="font-medium text-zinc-700"></span>
+                        <span>•</span>
+                        <span id="modal-portfolio-distance"></span>
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="closePortfolioModal()" class="text-zinc-400 hover:text-zinc-700 text-2xl font-medium leading-none">&times;</button>
+        </div>
+
+        <!-- Bio & Certifications -->
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Professional Background & Credentials</h4>
+            <p id="modal-portfolio-bio" class="text-xs text-zinc-600 leading-relaxed"></p>
+            <div id="modal-portfolio-certs" class="flex flex-wrap gap-1.5 pt-1"></div>
+        </div>
+
+        <!-- Before/After Inspection Photo Gallery -->
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Field Inspection & Repair Gallery</h4>
+            <div id="modal-portfolio-photos" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5"></div>
+        </div>
+
+        <!-- Video Diagnostic Showcase -->
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Diagnostic & Technical Video Clip</h4>
+            <video id="modal-portfolio-video" controls playsinline class="rounded-lg w-full h-48 bg-black object-cover shadow-inner">
+                <source src="" type="video/mp4">
+                Your browser does not support HTML5 video.
+            </video>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <div class="text-xs text-zinc-500">
+                Base Starting Fee: <strong id="modal-portfolio-price" class="text-zinc-900 font-bold text-sm"></strong>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closePortfolioModal()" class="px-4 py-2 rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-50 text-xs font-medium transition">
+                    Close
+                </button>
+                <button type="button" id="modal-portfolio-book-btn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                    <span>Book Specialist</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+    let currentPortfolioSpecialist = null;
+
+    function openPortfolioModal(spec) {
+        currentPortfolioSpecialist = spec;
+        document.getElementById('modal-portfolio-avatar').src = spec.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80";
+        document.getElementById('modal-portfolio-name').textContent = spec.name;
+        document.getElementById('modal-portfolio-title').textContent = spec.title;
+        document.getElementById('modal-portfolio-rating').textContent = "★ " + spec.rating + " Rating";
+        document.getElementById('modal-portfolio-tasks').textContent = (spec.completed_tasks || spec.completed_count || 0) + " Verified Tasks";
+        document.getElementById('modal-portfolio-distance').textContent = spec.distance_km + " km away • " + spec.location;
+        document.getElementById('modal-portfolio-price').textContent = "৳" + Number(spec.price || spec.base_price).toFixed(0);
+        document.getElementById('modal-portfolio-bio').textContent = spec.bio || "Certified trade professional with comprehensive on-site experience across Saidpur.";
+
+        // Certifications
+        const certsDiv = document.getElementById('modal-portfolio-certs');
+        certsDiv.innerHTML = '';
+        const certs = Array.isArray(spec.certifications) ? spec.certifications : [spec.certifications || "Verified Professional"];
+        certs.forEach(c => {
+            const badge = document.createElement('span');
+            badge.className = "px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200/60 text-indigo-700 font-medium text-[10px] flex items-center gap-1";
+            badge.innerHTML = "✓ " + c;
+            certsDiv.appendChild(badge);
+        });
+
+        // Photos
+        const photosDiv = document.getElementById('modal-portfolio-photos');
+        photosDiv.innerHTML = '';
+        const photos = Array.isArray(spec.portfolio_photos) && spec.portfolio_photos.length > 0 ? spec.portfolio_photos : [
+            "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80"
+        ];
+        photos.forEach((url, i) => {
+            const imgWrap = document.createElement('div');
+            imgWrap.className = "rounded-xl overflow-hidden border border-zinc-200 relative group aspect-4/3 bg-zinc-100";
+            imgWrap.innerHTML = `
+                <img src="${url}" alt="Inspection Work" class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
+                <span class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-zinc-900/70 text-white text-[9px] font-medium backdrop-blur-xs">Inspection ${i+1}</span>
+            `;
+            photosDiv.appendChild(imgWrap);
+        });
+
+        // Video
+        const videoElem = document.getElementById('modal-portfolio-video');
+        videoElem.src = spec.portfolio_video || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+
+        // Book button action in portfolio modal
+        const bookBtn = document.getElementById('modal-portfolio-book-btn');
+        bookBtn.onclick = function() {
+            closePortfolioModal();
+            openBookingModal(spec.id, spec.name, spec.category, spec.price, '{{ selected_slot }}', '{{ urgency }}');
+        };
+
+        document.getElementById('portfolio-modal').classList.remove('hidden');
+    }
+
+    function closePortfolioModal() {
+        const videoElem = document.getElementById('modal-portfolio-video');
+        if (videoElem) {
+            videoElem.pause();
+        }
+        document.getElementById('portfolio-modal').classList.add('hidden');
+    }
+
     function openBookingModal(provId, provName, category, price, slot, urgency) {
         document.getElementById('modal-provider-id').value = provId;
         document.getElementById('modal-slot').value = slot;

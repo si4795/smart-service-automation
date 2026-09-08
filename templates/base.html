@@ -38,7 +38,7 @@
             <div class="flex items-center justify-between h-14 gap-4">
                 
                 <!-- Brand Logo & Consumer Subtitle -->
-                <a href="{{ url_for('index') }}" class="flex items-center space-x-2.5 group">
+                <a href="{{ url_for('dashboard') if current_user else url_for('landing') }}" class="flex items-center space-x-2.5 group">
                     <div class="h-8 w-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs group-hover:bg-indigo-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -47,26 +47,26 @@
                     <div>
                         <div class="flex items-center space-x-1.5">
                             <span class="text-base font-bold tracking-tight text-zinc-900">SmartServe</span>
-                            <span class="px-1.5 py-0.5 text-[9px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Saidpur</span>
+                            <span class="px-1.5 py-0.5 text-[9px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Saidpur Cantonment</span>
                         </div>
-                        <p class="text-[10px] text-zinc-400 hidden sm:block leading-none">On-Demand Care</p>
+                        <p class="text-[10px] text-zinc-400 hidden sm:block leading-none">Verified Home & Technical Experts</p>
                     </div>
                 </a>
 
                 <!-- Navigation Links -->
                 <nav class="flex items-center space-x-1 sm:space-x-2">
-                    <a href="{{ url_for('index') }}" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 {% if active_tab == 'customer' %}bg-zinc-100 text-zinc-900 font-semibold{% else %}text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50{% endif %}">
+                    <a href="{{ url_for('dashboard') }}" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 {% if active_tab == 'customer' %}bg-zinc-100 text-zinc-900 font-semibold{% else %}text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50{% endif %}">
                         <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        <span>Find Service</span>
+                        <span>Specialist Search</span>
                     </a>
                     
                     <a href="{{ url_for('tracking') }}" class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 {% if active_tab == 'tracking' %}bg-zinc-100 text-zinc-900 font-semibold{% else %}text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50{% endif %}">
                         <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>Track Bookings</span>
+                        <span>Track My Orders</span>
                     </a>
 
                     <!-- Technician Portal Link (Only for logged in technicians) -->
@@ -75,7 +75,7 @@
                         <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                         </svg>
-                        <span>Technician Deck</span>
+                        <span>Technician Dispatch Board</span>
                     </a>
                     {% endif %}
 
@@ -95,19 +95,20 @@
                                     </span>
                                 </div>
                             </div>
-                            <a href="{{ url_for('logout') }}" title="Sign Out" class="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition">
+                            <a href="{{ url_for('logout') }}" title="Sign Out" class="px-2 py-1 rounded-md text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition text-xs font-medium flex items-center gap-1">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                                 </svg>
+                                <span>Sign Out</span>
                             </a>
                         </div>
                         {% else %}
                         <!-- Logged Out Actions -->
                         <a href="{{ url_for('login') }}" class="px-2.5 py-1 text-xs font-semibold text-zinc-700 hover:text-zinc-900 transition">
-                            Sign In
+                            Log In
                         </a>
                         <a href="{{ url_for('signup') }}" class="px-2.5 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs transition">
-                            Get Started
+                            Sign Up
                         </a>
                         {% endif %}
                     </div>

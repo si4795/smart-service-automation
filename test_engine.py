@@ -220,6 +220,59 @@ class TestSmartServiceAutomation(unittest.TestCase):
             self.assertEqual(inv_row["booking_id"], b_id)
             self.assertGreater(inv_row["total_amount"], 0)
 
+    def test_consumer_landing_page_and_redirects(self):
+        """Verifies GET / serves landing page for anonymous users and redirects logged in users."""
+        # Unauthenticated: gets landing page
+        resp = self.app.get("/")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("Home repairs and maintenance", html)
+        self.assertIn("Explore as Customer", html)
+
+        # Authenticated Customer: redirects to /dashboard
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-cust-01"
+            sess["user_role"] = "customer"
+
+        resp_cust = self.app.get("/")
+        self.assertEqual(resp_cust.status_code, 302)
+        self.assertIn("/dashboard", resp_cust.location)
+
+    def test_guarded_dashboard_access(self):
+        """Verifies GET /dashboard is session-guarded by login_required."""
+        # Unauthenticated: redirects to login
+        unauth = self.app.get("/dashboard")
+        self.assertEqual(unauth.status_code, 302)
+        self.assertIn("/login", unauth.location)
+
+        # Authenticated Customer: loads multi-panel dashboard
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-cust-01"
+            sess["user_role"] = "customer"
+
+        auth_resp = self.app.get("/dashboard")
+        self.assertEqual(auth_resp.status_code, 200)
+        html = auth_resp.get_data(as_text=True)
+        self.assertIn("Available Specialists", html)
+        self.assertIn("Filter & Schedule", html)
+
+    def test_technician_portfolio_media_columns(self):
+        """Verifies SQLite technicians table contains portfolio photos, video, avatar, and completed_tasks."""
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(technicians)")
+            cols = {r["name"] for r in cursor.fetchall()}
+            for expected_col in ["completed_tasks", "avatar_url", "portfolio_photos", "portfolio_video", "bio", "certifications"]:
+                self.assertIn(expected_col, cols)
+
+        # Ensure providers fetched have populated portfolio attributes
+        prov = db.get_providers()[0]
+        self.assertIn("portfolio_photos", prov)
+        self.assertIsInstance(prov["portfolio_photos"], list)
+        self.assertIn("portfolio_video", prov)
+        self.assertTrue(prov["portfolio_video"].startswith("http"))
+        self.assertIn("completed_tasks", prov)
+
 if __name__ == "__main__":
     unittest.main()
 

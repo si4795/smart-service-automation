@@ -352,6 +352,90 @@ INITIAL_PROVIDERS = [
     }
 ]
 
+TRADE_PORTFOLIO_ASSETS = {
+    "Electrical Engineering": {
+        "photos": [
+            "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80"
+        ],
+        "video": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "certifications": ["Certified Industrial Electrician (Grade A)", "NFPA 70 National Electrical Code Compliant", "High-Voltage Safety Certified"],
+        "bio": "Over 10+ years specializing in residential power distribution, three-phase load balancing, and rapid short-circuit mitigation across Saidpur Cantonment."
+    },
+    "Plumbing & Pipefitting": {
+        "photos": [
+            "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80"
+        ],
+        "video": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "certifications": ["Master Sanitary Inspector License", "Underground Hydro-Jetting Certified", "Commercial Pressure System Specialist"],
+        "bio": "Expert pipefitter adept at complex high-pressure pump installations, concealed leakage pinpointing, and municipal drainage restoration."
+    },
+    "HVAC & Appliance Care": {
+        "photos": [
+            "https://images.unsplash.com/photo-1631545806609-b42551a37c95?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=80"
+        ],
+        "video": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "certifications": ["EPA Section 608 Universal Certification", "Inverter Refrigeration Specialist", "Commercial Air Handling Certified"],
+        "bio": "Certified HVAC technician with deep expertise in modern variable refrigerant flow (VRF) systems, multi-split inverter ACs, and high-efficiency heat exchangers."
+    },
+    "Pest Control & Hygiene": {
+        "photos": [
+            "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1585832770485-e68a5dbfad52?auto=format&fit=crop&w=800&q=80"
+        ],
+        "video": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "certifications": ["WHO/FAO Vector Management Certified", "GreenPest Eco-Shield Operator", "Commercial Food Safety Sanitation"],
+        "bio": "Public health sanitation expert providing hospital-grade disinfection, odorless non-toxic gel applications, and subterranean termite barrier systems."
+    },
+    "Carpentry & Woodwork": {
+        "photos": [
+            "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1505798577917-a65157d3320a?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80"
+        ],
+        "video": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "certifications": ["Guild of Master Craftsmen Member", "Architectural Joinery & Millwork Certified", "Smart Lock & Security Hardware Installer"],
+        "bio": "Veteran carpenter specialized in precision bespoke cabinetry, silent hydraulic soft-close installations, and high-security architectural door fittings."
+    },
+    "Vehicle Maintenance": {
+        "photos": [
+            "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80"
+        ],
+        "video": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "certifications": ["ASE Certified Master Automobile Technician", "Hybrid & EV Battery Diagnostic Specialist", "Bosch Advanced Electronic Injection"],
+        "bio": "Master automotive diagnostician specializing in fast mobile roadside triage, computerized engine scan fault recovery, and brake safety overhaul."
+    }
+}
+
+PROVIDER_AVATARS = {
+    "prov-elec-01": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80",
+    "prov-elec-02": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&q=80",
+    "prov-elec-03": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80",
+    "prov-plumb-01": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80",
+    "prov-plumb-02": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=256&q=80",
+    "prov-plumb-03": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=256&q=80",
+    "prov-app-01": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=256&q=80",
+    "prov-app-02": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=256&q=80",
+    "prov-app-03": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=256&q=80",
+    "prov-clean-01": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=256&q=80",
+    "prov-clean-02": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=256&q=80",
+    "prov-clean-03": "https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=256&q=80",
+    "prov-maint-01": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=256&q=80",
+    "prov-maint-02": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=256&q=80",
+    "prov-maint-03": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=256&q=80",
+    "prov-car-01": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=256&q=80",
+    "prov-car-02": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80",
+    "prov-car-03": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=256&q=80"
+}
+
 class Database:
     def __init__(self, db_path: str = DB_PATH) -> None:
         self.db_path = db_path
@@ -401,12 +485,32 @@ class Database:
                     active_jobs INTEGER NOT NULL DEFAULT 0,
                     phone TEXT,
                     completed_count INTEGER NOT NULL DEFAULT 0,
+                    completed_tasks INTEGER NOT NULL DEFAULT 0,
                     specialty TEXT,
                     badge TEXT,
+                    avatar_url TEXT,
+                    portfolio_photos TEXT,
+                    portfolio_video TEXT,
+                    bio TEXT,
+                    certifications TEXT,
                     baseline_busy_slots TEXT DEFAULT '[]',
                     created_at TEXT NOT NULL
                 );
             """)
+
+            # Migrate missing columns if technicians table already exists
+            cursor.execute("PRAGMA table_info(technicians)")
+            existing_cols = {row[1] for row in cursor.fetchall()}
+            for col_name, col_def in [
+                ("completed_tasks", "INTEGER NOT NULL DEFAULT 0"),
+                ("avatar_url", "TEXT"),
+                ("portfolio_photos", "TEXT"),
+                ("portfolio_video", "TEXT"),
+                ("bio", "TEXT"),
+                ("certifications", "TEXT"),
+            ]:
+                if col_name not in existing_cols:
+                    cursor.execute(f"ALTER TABLE technicians ADD COLUMN {col_name} {col_def};")
 
             # 3. bookings table
             cursor.execute("""
@@ -478,14 +582,23 @@ class Database:
 
         # Seed technicians
         for p in INITIAL_PROVIDERS:
+            cat_assets = TRADE_PORTFOLIO_ASSETS.get(p["category"], {})
+            avatar_url = p.get("avatar_url") or PROVIDER_AVATARS.get(p["id"], "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80")
+            photos = p.get("portfolio_photos") or cat_assets.get("photos", [])
+            video = p.get("portfolio_video") or cat_assets.get("video", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
+            bio = p.get("bio") or cat_assets.get("bio", "Certified trade specialist with years of field experience in Saidpur.")
+            certs = p.get("certifications") or cat_assets.get("certifications", ["Certified Professional Specialist"])
+            completed = p.get("completed_count", 0)
+
             cursor.execute("""
                 INSERT OR IGNORE INTO technicians 
-                (id, name, title, category, rating, base_price, location, distance_km, active_jobs, phone, completed_count, specialty, badge, baseline_busy_slots, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (id, name, title, category, rating, base_price, location, distance_km, active_jobs, phone, completed_count, completed_tasks, specialty, badge, avatar_url, portfolio_photos, portfolio_video, bio, certifications, baseline_busy_slots, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 p["id"], p["name"], p["title"], p["category"], p["rating"], p["price"],
                 p["location"], p["distance_km"], p.get("active_jobs", 0), p.get("phone", ""),
-                p.get("completed_count", 0), p.get("specialty", ""), p.get("badge", ""),
+                completed, completed, p.get("specialty", ""), p.get("badge", ""),
+                avatar_url, json.dumps(photos), video, bio, json.dumps(certs),
                 json.dumps(p.get("busy_slots", [])), now_str
             ))
         conn.commit()
@@ -502,6 +615,49 @@ class Database:
             self._seed_initial_data(conn)
 
     # ------------------ Technicians / Providers ------------------ #
+
+    def _hydrate_technician_dict(self, t: Dict[str, Any]) -> Dict[str, Any]:
+        """Enriches technician dictionary with decoded portfolio media, avatars, and aliases."""
+        cat_assets = TRADE_PORTFOLIO_ASSETS.get(t.get("category", ""), {})
+        
+        # Portfolio photos
+        photos = t.get("portfolio_photos")
+        if isinstance(photos, str):
+            try:
+                t["portfolio_photos"] = json.loads(photos)
+            except Exception:
+                t["portfolio_photos"] = cat_assets.get("photos", [])
+        elif not photos:
+            t["portfolio_photos"] = cat_assets.get("photos", [])
+
+        # Certifications
+        certs = t.get("certifications")
+        if isinstance(certs, str):
+            try:
+                t["certifications"] = json.loads(certs)
+            except Exception:
+                t["certifications"] = cat_assets.get("certifications", ["Certified Professional Specialist"])
+        elif not certs:
+            t["certifications"] = cat_assets.get("certifications", ["Certified Professional Specialist"])
+
+        # Avatar
+        if not t.get("avatar_url"):
+            t["avatar_url"] = PROVIDER_AVATARS.get(t.get("id", ""), "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80")
+
+        # Video
+        if not t.get("portfolio_video"):
+            t["portfolio_video"] = cat_assets.get("video", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
+
+        # Bio
+        if not t.get("bio"):
+            t["bio"] = cat_assets.get("bio", "Certified professional trade technician in Saidpur.")
+
+        # Numbers
+        t["price"] = float(t.get("base_price", 500.0))
+        t["active_jobs_count"] = int(t.get("active_jobs", 0))
+        t["completed_count"] = int(t.get("completed_count", 0))
+        t["completed_tasks"] = int(t.get("completed_tasks") if t.get("completed_tasks") is not None else t["completed_count"])
+        return t
 
     def get_providers(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
         """Returns all technicians, optionally filtered by category, with dynamic busy slots."""
@@ -539,9 +695,8 @@ class Database:
                 combined_busy = list(dict.fromkeys(baseline + active_booking_slots))
                 t["busy_slots"] = combined_busy
 
-                # Compatibility aliases
-                t["price"] = float(t["base_price"])
-                t["active_jobs_count"] = int(t["active_jobs"])
+                # Hydrate portfolio assets, avatars, and numbers
+                t = self._hydrate_technician_dict(t)
                 technicians.append(t)
 
             return technicians
@@ -563,8 +718,7 @@ class Database:
             """, (provider_id,))
             active_booking_slots = [r["full_slot"] for r in cursor.fetchall()]
             t["busy_slots"] = list(dict.fromkeys(baseline + active_booking_slots))
-            t["price"] = float(t["base_price"])
-            t["active_jobs_count"] = int(t["active_jobs"])
+            t = self._hydrate_technician_dict(t)
             return t
 
     def is_slot_busy(self, provider_id: str, slot: str) -> bool:
@@ -686,6 +840,7 @@ class Database:
                 cursor.execute("""
                     UPDATE technicians 
                     SET completed_count = completed_count + 1,
+                        completed_tasks = completed_tasks + 1,
                         active_jobs = MAX(0, active_jobs - 1)
                     WHERE id = ?
                 """, (tech_id,))
