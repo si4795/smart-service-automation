@@ -1,0 +1,574 @@
+{% extends "app_layout.html" %}
+
+{% block title %}Order #{{ booking.id }} Status | SmartServe{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-[fadeIn_0.25s_ease-in-out]">
+
+    <!-- Header & Order Code -->
+    <div class="border-b border-slate-800/80 pb-5">
+        <div class="flex items-center gap-2 text-xs text-slate-400 mb-2">
+            <a href="{{ url_for('dashboard') }}" class="hover:text-indigo-400 transition">Dashboard</a>
+            <span class="text-slate-600">/</span>
+            <a href="{{ url_for('tracking') }}" class="hover:text-indigo-400 transition">Orders</a>
+            <span class="text-slate-600">/</span>
+            <span class="text-white font-medium">Order #{{ booking.id }}</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Order #{{ booking.id }}</h1>
+                    <span class="px-3 py-1 rounded-full text-xs font-bold {% if booking.status == 'Completed' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% elif booking.status == 'In Progress' %}bg-blue-500/10 text-blue-400 border border-blue-500/20{% elif booking.status == 'On the Way' %}bg-purple-500/10 text-purple-400 border border-purple-500/20{% else %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% endif %}">
+                        {{ booking.status }}
+                    </span>
+                    {% if booking.urgency == 'Emergency' %}
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        Urgent Dispatch
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-slate-400 mt-1">Booked on {{ booking.created_at or booking.history[0].timestamp if booking.history else 'Today' }} • Saidpur Cantonment</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                {% if booking.status == 'Completed' %}
+                <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-700 hover:to-slate-600 text-white text-xs font-bold transition shadow-xs flex items-center gap-2 border border-slate-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    <span>Print Receipt / PDF</span>
+                </button>
+                {% else %}
+                <div class="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Live Tracking Active</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 5-Stage Milestone Stepper -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+        <div class="relative">
+            
+            <!-- Progress Line Background -->
+            <div class="hidden md:block absolute top-5 left-10 right-10 h-1 bg-slate-800 -z-0">
+                <!-- Active Line Fill -->
+                <div class="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500" 
+                     style="width: {% if step_index == 0 %}0%{% elif step_index == 1 %}25%{% elif step_index == 2 %}50%{% elif step_index == 3 %}75%{% else %}100%{% endif %};">
+                </div>
+            </div>
+
+            <!-- Stepper Items -->
+            {% set step_labels = [
+                ("Requested", "Request Submitted", "Confirmed & registered on calendar"),
+                ("Accepted", "Pro Confirmed", "Technician assigned & prepped"),
+                ("On the Way", "En Route", "Specialist traveling to location"),
+                ("In Progress", "Work in Progress", "Diagnostics & service underway"),
+                ("Completed", "Completed", "Job finished & invoice issued")
+            ] %}
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-2 relative z-10">
+                {% for st_id, st_name, st_desc in step_labels %}
+                {% set idx = loop.index0 %}
+                <div class="flex md:flex-col items-center md:text-center gap-4 md:gap-3">
+                    
+                    <!-- Circle Indicator -->
+                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs transition-all duration-200 shrink-0
+                        {% if idx < step_index %}
+                            bg-emerald-600 text-white shadow-lg shadow-emerald-600/30
+                        {% elif idx == step_index %}
+                            bg-gradient-to-tr from-indigo-600 to-violet-600 text-white ring-4 ring-indigo-500/30 shadow-lg shadow-indigo-600/40
+                        {% else %}
+                            bg-slate-900 text-slate-500 border border-slate-800
+                        {% endif %}">
+                        {% if idx < step_index %}
+                        ✓
+                        {% elif idx == step_index %}
+                        <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                        {% else %}
+                        {{ idx + 1 }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Label -->
+                    <div>
+                        <h3 class="text-xs font-bold {% if idx <= step_index %}text-white{% else %}text-slate-500{% endif %}">
+                            {{ st_name }}
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5 leading-snug hidden sm:block">
+                            {{ st_desc }}
+                        </p>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Main Content: Order Details & Invoice Printable -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Technician Info & Location -->
+        <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Specialist Contact Card -->
+            {% if technician %}
+            <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Assigned Trade Specialist</h3>
+                    <span class="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded font-semibold">Verified Pro</span>
+                </div>
+
+                <div class="flex items-start gap-4">
+                    <img src="{{ technician.avatar_url }}" alt="{{ technician.name }}" class="w-16 h-16 rounded-2xl object-cover border border-slate-700 shrink-0">
+                    <div class="min-w-0 flex-1">
+                        <h4 class="font-bold text-white text-sm">{{ technician.name }}</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ technician.title }}</p>
+                        <div class="flex items-center gap-2 mt-2 text-xs">
+                            <span class="font-bold text-amber-400">★ {{ technician.rating }}</span>
+                            <span class="text-slate-600">•</span>
+                            <span class="text-slate-400">{{ technician.completed_tasks }} tasks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+                    <div class="text-xs text-slate-400">Direct Mobile Phone:</div>
+                    <a href="tel:{{ technician.phone }}" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                        </svg>
+                        <span>{{ technician.phone }}</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Direct Dispatch Chat (Customer <-> Assigned Specialist) -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-sm shadow-md shadow-indigo-500/30">
+                            💬
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Direct Dispatch Chat</h3>
+                            <p class="text-[10px] text-slate-400">Order #{{ booking.id }} • {{ booking.provider_name }}</p>
+                        </div>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Live
+                    </span>
+                </div>
+
+                <!-- Chat Messages Scrollable Box -->
+                <div id="chat-messages-container" class="max-h-72 min-h-[160px] overflow-y-auto space-y-3 p-3.5 bg-slate-900/70 rounded-2xl border border-slate-800/80 flex flex-col">
+                    {% if messages %}
+                        {% for msg in messages %}
+                            {% if msg.sender_role == 'customer' %}
+                            <!-- Customer bubble on the right (indigo/violet) -->
+                            <div class="flex flex-col items-end max-w-[88%] self-end">
+                                <div class="flex items-center justify-end gap-1.5 mb-1 text-[10px] text-slate-400">
+                                    <span class="font-bold text-indigo-300">{{ msg.sender_name }}</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">Customer</span>
+                                    <span class="text-slate-500 text-[9px]">{{ msg.created_at }}</span>
+                                </div>
+                                <div class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl rounded-tr-xs px-3.5 py-2 text-xs shadow-md shadow-indigo-600/20 break-words text-left">
+                                    {{ msg.message }}
+                                </div>
+                            </div>
+                            {% else %}
+                            <!-- Technician bubble on the left (slate/zinc) -->
+                            <div class="flex flex-col items-start max-w-[88%] self-start">
+                                <div class="flex items-center gap-1.5 mb-1 text-[10px] text-slate-400">
+                                    <span class="font-bold text-slate-200">{{ msg.sender_name }}</span>
+                                    <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">Specialist</span>
+                                    <span class="text-slate-500 text-[9px]">{{ msg.created_at }}</span>
+                                </div>
+                                <div class="bg-slate-800 text-slate-100 rounded-2xl rounded-tl-xs px-3.5 py-2 text-xs border border-slate-700/80 shadow-md break-words text-left">
+                                    {{ msg.message }}
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div id="chat-empty-state" class="text-center py-8 my-auto text-slate-500 text-xs">
+                            <p class="font-semibold text-slate-400">No messages yet.</p>
+                            <p class="text-[11px] text-slate-500 mt-1">Send quick instructions to your assigned technician.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Chat Input Form -->
+                <form id="chat-form" onsubmit="handleSendChat(event, '{{ booking.id }}')" class="flex items-center gap-2 pt-1">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        name="message" 
+                        placeholder="Message your specialist..." 
+                        required 
+                        autocomplete="off"
+                        class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                    >
+                    <button 
+                        type="submit" 
+                        id="chat-submit-btn"
+                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold transition flex items-center gap-1 shadow-lg shadow-indigo-600/25 shrink-0"
+                    >
+                        <span>Send</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Service Details Card -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800/80 pb-3">Service Location & Notes</h3>
+                
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <div class="text-slate-500 text-[10px] uppercase font-bold">Client Name</div>
+                        <div class="font-bold text-white mt-0.5">{{ booking.client_name }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-500 text-[10px] uppercase font-bold">Contact Phone</div>
+                        <div class="font-bold text-white mt-0.5">{{ booking.client_phone }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-500 text-[10px] uppercase font-bold">Service Address</div>
+                        <div class="font-medium text-slate-300 mt-0.5 leading-relaxed">{{ booking.client_address }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-slate-500 text-[10px] uppercase font-bold">Scheduled Appointment Slot</div>
+                        <div class="font-bold text-indigo-400 mt-0.5">{{ booking.slot }}</div>
+                    </div>
+
+                    {% if booking.notes %}
+                    <div>
+                        <div class="text-slate-500 text-[10px] uppercase font-bold">Special Notes</div>
+                        <div class="text-slate-300 bg-slate-900 p-3 rounded-2xl border border-slate-800 mt-0.5">{{ booking.notes }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Audit History Timeline -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-slate-800/80 pb-3">Lifecycle Event History</h3>
+                
+                <div class="space-y-4 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-800">
+                    {% for ev in booking.history %}
+                    <div class="flex items-start gap-3 relative pl-6">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 absolute left-1 top-1 ring-4 ring-slate-950"></span>
+                        <div class="space-y-0.5 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-white">{{ ev.status }}</span>
+                                <span class="text-[10px] text-slate-500">{{ ev.timestamp }}</span>
+                            </div>
+                            <p class="text-slate-400 text-[11px]">{{ ev.note }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Digital Tax Invoice / Live Status -->
+        <div class="lg:col-span-7 space-y-6">
+            
+            {% if booking.status == 'Completed' and booking.invoice %}
+            <!-- Official Digital Tax Invoice (Printable Receipt) -->
+            <div id="invoice-printable" class="bg-white text-zinc-900 border-2 border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+                
+                <!-- Invoice Header -->
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-zinc-200 pb-6">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-sm flex items-center justify-center">S</span>
+                            <span class="text-lg font-black tracking-tight text-zinc-900">SmartServe</span>
+                        </div>
+                        <p class="text-xs text-zinc-500 mt-1">Verified On-Demand Home Services Platform</p>
+                        <p class="text-[10px] text-zinc-400">Saidpur Cantonment, Nilphamari-5310</p>
+                    </div>
+
+                    <div class="text-left sm:text-right space-y-1">
+                        <div class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Official Tax Invoice</div>
+                        <div class="text-base font-black text-zinc-900">{{ booking.invoice.invoice_no }}</div>
+                        <div class="text-xs text-zinc-500">Date: {{ booking.invoice.issue_date }}</div>
+                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase">
+                            Payment Completed
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Parties Information -->
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                        <div class="font-bold text-zinc-400 uppercase text-[10px]">Billed To:</div>
+                        <div class="font-bold text-zinc-900 mt-0.5">{{ booking.invoice.client_name }}</div>
+                        <div class="text-zinc-600 mt-0.5">{{ booking.invoice.client_address }}</div>
+                        <div class="text-zinc-500">{{ booking.invoice.client_phone }}</div>
+                    </div>
+
+                    <div class="text-right">
+                        <div class="font-bold text-zinc-400 uppercase text-[10px]">Service Partner:</div>
+                        <div class="font-bold text-zinc-900 mt-0.5">{{ booking.invoice.provider_name }}</div>
+                        <div class="text-zinc-600 mt-0.5">{{ booking.invoice.provider_title }}</div>
+                        <div class="text-zinc-500">Ref: {{ booking.id }}</div>
+                    </div>
+                </div>
+
+                <!-- Itemized Breakdown Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="border-b-2 border-zinc-800 text-zinc-700">
+                                <th class="text-left py-2">Service Description</th>
+                                <th class="text-center py-2">Category</th>
+                                <th class="text-right py-2">Amount (BDT)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-100">
+                            <tr>
+                                <td class="py-2.5 font-medium text-zinc-900">
+                                    {{ booking.invoice.category }} - Standard Trade Service
+                                </td>
+                                <td class="py-2.5 text-center text-zinc-500">{{ booking.invoice.category }}</td>
+                                <td class="py-2.5 text-right font-semibold">৳{{ "%.2f"|format(booking.invoice.base_price) }}</td>
+                            </tr>
+                            {% if booking.invoice.emergency_fee > 0 %}
+                            <tr>
+                                <td class="py-2.5 text-rose-600 font-medium">Urgent Emergency Dispatch Surcharge</td>
+                                <td class="py-2.5 text-center text-rose-600">Urgent Priority</td>
+                                <td class="py-2.5 text-right font-semibold text-rose-600">৳{{ "%.2f"|format(booking.invoice.emergency_fee) }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="py-2.5 text-zinc-600">Platform Safety, Scheduling & Insurance Fee</td>
+                                <td class="py-2.5 text-center text-zinc-500">Convenience</td>
+                                <td class="py-2.5 text-right font-semibold">৳{{ "%.2f"|format(booking.invoice.platform_fee) }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="border-t-2 border-zinc-200">
+                                <td colspan="2" class="py-2 font-medium text-zinc-600 text-right pr-4">Government VAT (5%):</td>
+                                <td class="py-2 text-right font-semibold text-zinc-900">৳{{ "%.2f"|format(booking.invoice.vat) }}</td>
+                            </tr>
+                            <tr class="border-t-2 border-zinc-800 text-sm font-black">
+                                <td colspan="2" class="py-3 text-right pr-4 text-zinc-900">Grand Total Paid:</td>
+                                <td class="py-3 text-right text-indigo-600 text-lg">৳{{ "%.2f"|format(booking.invoice.grand_total) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Footer Signoff -->
+                <div class="pt-4 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-400 gap-2">
+                    <div>SmartServe Automated Electronic Invoice • Authorized by System Engine</div>
+                    <button onclick="window.print()" class="text-indigo-600 hover:text-indigo-800 font-bold underline">
+                        Download / Print Receipt
+                    </button>
+                </div>
+
+            </div>
+            {% else %}
+            
+            <!-- Live Progress / Action Card -->
+            <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+                <div class="space-y-2">
+                    <div class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Live Job Tracking</div>
+                    <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+                        {% if booking.status == 'Requested' %}
+                        Waiting for Technician Confirmation
+                        {% elif booking.status == 'Accepted' %}
+                        Technician Prepping for Dispatch
+                        {% elif booking.status == 'On the Way' %}
+                        Technician En Route to Your Address
+                        {% elif booking.status == 'In Progress' %}
+                        Repair & Diagnostics Currently Underway
+                        {% endif %}
+                    </h2>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        {% if booking.status == 'Requested' %}
+                        Your appointment has been registered in the system. The specialist has received your service ticket.
+                        {% elif booking.status == 'Accepted' %}
+                        The specialist has confirmed the time window and gathered required inspection tools.
+                        {% elif booking.status == 'On the Way' %}
+                        The technician has departed and is traveling to your location: {{ booking.client_address }}.
+                        {% elif booking.status == 'In Progress' %}
+                        Work is actively being executed on site. Digital tax invoice will be ready immediately upon completion.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- Status Map / Animation Illustration -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 text-center space-y-3">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-2xl mx-auto shadow-lg shadow-indigo-600/30">
+                        {% if booking.status == 'Requested' %}
+                        📋
+                        {% elif booking.status == 'Accepted' %}
+                        👍
+                        {% elif booking.status == 'On the Way' %}
+                        🚗
+                        {% elif booking.status == 'In Progress' %}
+                        ⚙️
+                        {% else %}
+                        ✅
+                        {% endif %}
+                    </div>
+                    <div class="text-xs font-bold text-white">
+                        Status Active: {{ booking.status }}
+                    </div>
+                    <p class="text-[11px] text-slate-400 max-w-sm mx-auto">
+                        This view automatically updates as your service specialist advances the job state.
+                    </p>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="pt-2 flex flex-wrap items-center gap-3">
+                    <a href="{{ url_for('services_by_category', category='all') }}" class="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 text-xs font-semibold transition">
+                        ← Book Another Service
+                    </a>
+                    <a href="{{ url_for('tracking') }}" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-500/25">
+                        View All My Orders
+                    </a>
+                </div>
+
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function scrollChatToBottom() {
+        const container = document.getElementById('chat-messages-container');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function appendMessageBubble(m) {
+        const emptyState = document.getElementById('chat-empty-state');
+        if (emptyState) emptyState.remove();
+
+        const container = document.getElementById('chat-messages-container');
+        if (!container) return;
+
+        const isCustomer = m.sender_role === 'customer';
+        const wrapper = document.createElement('div');
+        wrapper.className = isCustomer 
+            ? 'flex flex-col items-end max-w-[88%] self-end' 
+            : 'flex flex-col items-start max-w-[88%] self-start';
+
+        const header = document.createElement('div');
+        header.className = isCustomer 
+            ? 'flex items-center justify-end gap-1.5 mb-1 text-[10px] text-slate-400' 
+            : 'flex items-center gap-1.5 mb-1 text-[10px] text-slate-400';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = isCustomer ? 'font-bold text-indigo-300' : 'font-bold text-slate-200';
+        nameSpan.textContent = m.sender_name;
+
+        const roleBadge = document.createElement('span');
+        roleBadge.className = isCustomer 
+            ? 'text-[9px] px-1.5 py-0.2 rounded bg-indigo-950 text-indigo-300 border border-indigo-800'
+            : 'text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700';
+        roleBadge.textContent = isCustomer ? 'Customer' : 'Specialist';
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'text-slate-500 text-[9px]';
+        timeSpan.textContent = m.created_at;
+
+        header.appendChild(nameSpan);
+        header.appendChild(roleBadge);
+        header.appendChild(timeSpan);
+
+        const bubble = document.createElement('div');
+        bubble.className = isCustomer 
+            ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl rounded-tr-xs px-3.5 py-2 text-xs shadow-md shadow-indigo-600/20 break-words text-left'
+            : 'bg-slate-800 text-slate-100 rounded-2xl rounded-tl-xs px-3.5 py-2 text-xs border border-slate-700/80 shadow-md break-words text-left';
+        bubble.textContent = m.message;
+
+        wrapper.appendChild(header);
+        wrapper.appendChild(bubble);
+        container.appendChild(wrapper);
+        scrollChatToBottom();
+    }
+
+    async function handleSendChat(e, bookingId) {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        if (!input) return;
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        const submitBtn = document.getElementById('chat-submit-btn');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            const res = await fetch(`/orders/${encodeURIComponent(bookingId)}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ message: msg })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                input.value = '';
+                appendMessageBubble(data.message);
+            } else {
+                alert(data.error || "Failed to send message.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Network error sending message.");
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+            input.focus();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        scrollChatToBottom();
+    });
+
+    setInterval(async () => {
+        try {
+            const res = await fetch(`/orders/{{ booking.id }}/messages`);
+            const data = await res.json();
+            if (res.ok && data.messages) {
+                const container = document.getElementById('chat-messages-container');
+                if (!container) return;
+                const currentCount = container.querySelectorAll('.break-words').length;
+                if (data.messages.length > currentCount) {
+                    for (let i = currentCount; i < data.messages.length; i++) {
+                        appendMessageBubble(data.messages[i]);
+                    }
+                }
+            }
+        } catch (e) {
+            // silent polling catch
+        }
+    }, 5000);
+</script>
+{% endblock %}

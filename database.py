@@ -21,13 +21,41 @@ CATEGORIES = [
     "Vehicle Maintenance"
 ]
 
-CATEGORY_ALIASES = {
+CATEGORY_ALIASES: Dict[str, Optional[str]] = {
     "Appliance & Gadget Repair": "HVAC & Appliance Care",
+    "Appliance Repair": "HVAC & Appliance Care",
     "Plumbing": "Plumbing & Pipefitting",
     "Electrical": "Electrical Engineering",
     "Cleaning & Pest Control": "Pest Control & Hygiene",
     "Home Maintenance": "Carpentry & Woodwork",
-    "Car Care & Repair": "Vehicle Maintenance"
+    "Carpentry": "Carpentry & Woodwork",
+    "Car Care & Repair": "Vehicle Maintenance",
+    "Vehicle Care": "Vehicle Maintenance",
+    "Home Painting": "Pest Control & Hygiene",
+    "HVAC & AC": "HVAC & Appliance Care",
+    "HVAC": "HVAC & Appliance Care",
+    "all": None,
+    "electrical": "Electrical Engineering",
+    "plumbing": "Plumbing & Pipefitting",
+    "hvac": "HVAC & Appliance Care",
+    "appliances": "HVAC & Appliance Care",
+    "appliance-repair": "HVAC & Appliance Care",
+    "carpentry": "Carpentry & Woodwork",
+    "hygiene": "Pest Control & Hygiene",
+    "pest-control": "Pest Control & Hygiene",
+    "painting": "Pest Control & Hygiene",
+    "home-painting": "Pest Control & Hygiene",
+    "vehicle-maintenance": "Vehicle Maintenance",
+    "vehicles": "Vehicle Maintenance",
+}
+
+CATEGORY_SLUGS: Dict[str, str] = {
+    "Electrical Engineering": "electrical",
+    "Plumbing & Pipefitting": "plumbing",
+    "HVAC & Appliance Care": "hvac",
+    "Pest Control & Hygiene": "pest-control",
+    "Carpentry & Woodwork": "carpentry",
+    "Vehicle Maintenance": "vehicle-maintenance",
 }
 
 STATUS_FLOW = ["Requested", "Accepted", "On the Way", "In Progress", "Completed"]
@@ -558,11 +586,26 @@ class Database:
                     FOREIGN KEY (booking_id) REFERENCES bookings(id)
                 );
             """)
+
+            # 5. messages table (direct dispatch chat)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    booking_code TEXT NOT NULL,
+                    sender_id TEXT NOT NULL,
+                    sender_role TEXT NOT NULL,
+                    sender_name TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_booking ON messages(booking_code);")
             conn.commit()
 
             # Seed if technicians table is empty
             cursor.execute("SELECT COUNT(*) FROM technicians")
-            tech_count = cursor.fetchone()[0]
+            count_row = cursor.fetchone()
+            tech_count = count_row[0] if count_row else 0
             if tech_count == 0:
                 self._seed_initial_data(conn)
 
@@ -653,18 +696,31 @@ class Database:
             t["bio"] = cat_assets.get("bio", "Certified professional trade technician in Saidpur.")
 
         # Numbers
-        t["price"] = float(t.get("base_price", 500.0))
-        t["active_jobs_count"] = int(t.get("active_jobs", 0))
-        t["completed_count"] = int(t.get("completed_count", 0))
-        t["completed_tasks"] = int(t.get("completed_tasks") if t.get("completed_tasks") is not None else t["completed_count"])
+        raw_price = t.get("base_price")
+        t["price"] = float(raw_price) if raw_price is not None else 500.0
+
+        raw_jobs = t.get("active_jobs")
+        t["active_jobs_count"] = int(raw_jobs) if raw_jobs is not None else 0
+
+        raw_completed = t.get("completed_count")
+        t["completed_count"] = int(raw_completed) if raw_completed is not None else 0
+
+        raw_tasks = t.get("completed_tasks")
+        t["completed_tasks"] = int(raw_tasks) if raw_tasks is not None else t["completed_count"]
         return t
 
     def get_providers(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
         """Returns all technicians, optionally filtered by category, with dynamic busy slots."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            canonical = None
             if category:
-                canonical = CATEGORY_ALIASES.get(category, category)
+                if category.lower() == "all":
+                    category = None
+                else:
+                    canonical = CATEGORY_ALIASES.get(category) or CATEGORY_ALIASES.get(category.lower()) or category
+
+            if canonical:
                 cursor.execute("""
                     SELECT * FROM technicians 
                     WHERE category = ? OR category = ?
@@ -734,7 +790,8 @@ class Database:
                 SELECT COUNT(*) FROM bookings 
                 WHERE technician_id = ? AND slot_date = ? AND slot_time = ? AND status != 'Cancelled'
             """, (provider_id, slot_date, slot_time))
-            if cursor.fetchone()[0] > 0:
+            count_row = cursor.fetchone()
+            if count_row and count_row[0] > 0:
                 return True
 
             # 2. Check baseline busy slots
@@ -935,7 +992,8 @@ class Database:
 
     def generate_invoice(self, booking: Dict[str, Any]) -> Dict[str, Any]:
         """Calculates invoice financial line items."""
-        base_price = float(booking.get("price", booking.get("base_price", 500.0)))
+        raw_price = booking.get("price") if booking.get("price") is not None else booking.get("base_price")
+        base_price = float(raw_price) if raw_price is not None else 500.0
         is_emergency = str(booking.get("urgency", booking.get("priority", ""))).strip().lower() == "emergency"
         emergency_fee = 250.0 if is_emergency else 0.0
         platform_fee = 50.0
@@ -1107,4 +1165,169 @@ class Database:
 
         return self.get_user_by_id(user_id), None
 
+    def update_user_profile(
+        self,
+        user_id: str,
+        name: Optional[str] = None,
+        phone: Optional[str] = None,
+        address: Optional[str] = None,
+        password: Optional[str] = None,
+        old_password: Optional[str] = None
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+        """Updates user details, address, and password with old password verification in SQLite."""
+        user = self.get_user_by_id(user_id)
+        if not user:
+            return None, "User not found."
+
+        updated_name = name.strip() if name is not None and name.strip() else user["name"]
+        updated_phone = phone.strip() if phone is not None else user.get("phone", "")
+        updated_address = address.strip() if address is not None else user.get("address", "")
+        
+        updated_password = user["password_hash"]
+        if password is not None and password.strip():
+            if not old_password or old_password.strip() != user["password_hash"]:
+                return None, "Current password does not match."
+            new_pw = password.strip()
+            if len(new_pw) < 6:
+                return None, "New password must be at least 6 characters."
+            updated_password = new_pw
+
+        parts = updated_name.split()
+        initials = "".join([p[0].upper() for p in parts[:2]]) if parts else user.get("avatar", "U")
+
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE users
+                SET name = ?, phone = ?, address = ?, password_hash = ?, avatar = ?
+                WHERE id = ?
+            """, (updated_name, updated_phone, updated_address, updated_password, initials, user_id))
+            conn.commit()
+
+        return self.get_user_by_id(user_id), None
+
+    def get_user_stats(self, user_id: str) -> Dict[str, Any]:
+        """Calculates total and active booking statistics for a user account."""
+        user = self.get_user_by_id(user_id)
+        if not user:
+            return {"total_bookings": 0, "active_bookings": 0, "completed_bookings": 0}
+
+        u_phone = user.get("phone", "")
+        u_name = user.get("name", "")
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN status != 'Completed' THEN 1 ELSE 0 END) AS active,
+                    SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed
+                FROM bookings 
+                WHERE user_id = ? OR client_phone = ? OR client_name = ?
+            """, (user_id, u_phone, u_name))
+            row = cursor.fetchone()
+            if row:
+                return {
+                    "total_bookings": int(row["total"] or 0),
+                    "active_bookings": int(row["active"] or 0),
+                    "completed_bookings": int(row["completed"] or 0)
+                }
+            return {"total_bookings": 0, "active_bookings": 0, "completed_bookings": 0}
+
+    # ------------------ Dispatch Chat Messages ------------------ #
+
+    def send_message(
+        self,
+        booking_code: str,
+        sender_id: str,
+        sender_role: str,
+        sender_name: str,
+        message: str
+    ) -> Optional[Dict[str, Any]]:
+        """Inserts a new chat message for a booking ticket."""
+        clean_msg = message.strip()
+        if not clean_msg:
+            return None
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO messages (booking_code, sender_id, sender_role, sender_name, message, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (str(booking_code), str(sender_id), str(sender_role), str(sender_name), clean_msg, now_str))
+            msg_id = cursor.lastrowid
+            conn.commit()
+            cursor.execute("SELECT * FROM messages WHERE id = ?", (msg_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_messages(self, booking_code: str) -> List[Dict[str, Any]]:
+        """Retrieves chronological chat messages for a booking ticket."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM messages
+                WHERE booking_code = ?
+                ORDER BY id ASC
+            """, (str(booking_code),))
+            return [dict(row) for row in cursor.fetchall()]
+
 db = Database()
+
+
+if __name__ == "__main__":
+    print("[INIT] Initializing and verifying SmartServe SQLite Database...")
+    db.init_db()
+
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+
+        # 1. List of all created tables and their row counts
+        print("=" * 70)
+        print("DATABASE TABLES IN smartserve.db")
+        print("=" * 70)
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+        tables = [row[0] for row in cursor.fetchall()]
+        for table_name in tables:
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+            count_row = cursor.fetchone()
+            count = count_row[0] if count_row else 0
+            print(f"  * Table: {table_name:<16} | Row Count: {count}")
+
+        # 2. Top 3 technicians from technicians table
+        print("\n" + "=" * 70)
+        print("TOP 3 TECHNICIANS (by Rating DESC)")
+        print("=" * 70)
+        cursor.execute("""
+            SELECT id, name, title, category, rating, base_price, completed_tasks, location
+            FROM technicians
+            ORDER BY rating DESC
+            LIMIT 3
+        """)
+        top_techs = cursor.fetchall()
+        for tech in top_techs:
+            print(f"  [{tech[0]}] {tech[1]} | {tech[2]} ({tech[3]}) | Rating: {tech[4]}/5.0 | Base: BDT {tech[5]} | Done: {tech[6]} | Loc: {tech[7]}")
+
+        # 3. Seeded users from users table
+        print("\n" + "=" * 70)
+        print("SEEDED USERS")
+        print("=" * 70)
+        cursor.execute("SELECT id, name, email, role, phone, address FROM users ORDER BY role, name")
+        seeded_users = cursor.fetchall()
+        for user in seeded_users:
+            print(f"  [{user[3].upper()}] {user[1]} | Email: {user[2]} | Phone: {user[4]} | Loc: {user[5]}")
+
+        # 4. Current bookings status count
+        print("\n" + "=" * 70)
+        print("CURRENT BOOKINGS STATUS COUNT")
+        print("=" * 70)
+        cursor.execute("SELECT status, COUNT(*) FROM bookings GROUP BY status ORDER BY status")
+        booking_stats = cursor.fetchall()
+        if not booking_stats:
+            cursor.execute("SELECT COUNT(*) FROM bookings")
+            total_b_row = cursor.fetchone()
+            total_b = total_b_row[0] if total_b_row else 0
+            print(f"  Total Bookings: {total_b} (No status breakdown available)")
+        else:
+            for status, count in booking_stats:
+                print(f"  * {status:<18}: {count}")
+        print("=" * 70)

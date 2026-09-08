@@ -1,22 +1,22 @@
-{% extends "base.html" %}
+{% extends "app_layout.html" %}
 
-{% block title %}Technician Dispatch Operations Kanban{% endblock %}
+{% block title %}Technician Dispatch Operations Kanban | SmartServe{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-6 animate-[fadeIn_0.25s_ease-in-out]">
 
     <!-- Header Operations Deck -->
-    <div class="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <h1 class="text-xl font-bold text-zinc-900">Field Operations Kanban</h1>
-                <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-xs font-semibold">Live Board</span>
+                <h1 class="text-xl font-black text-white">Field Operations Kanban</h1>
+                <span class="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 text-xs font-bold">Live Board</span>
             </div>
-            <p class="text-xs text-zinc-500 mt-1">Manage active work orders, track technician field transit, and advance sequential status milestones.</p>
+            <p class="text-xs text-slate-400 mt-1">Manage active work orders, track technician field transit, and advance sequential status milestones.</p>
         </div>
         <div class="flex items-center gap-3">
-            <div class="bg-zinc-50 px-3.5 py-1.5 rounded-lg border border-zinc-200 text-xs font-mono text-zinc-700">
-                Active Tickets: <span class="text-indigo-600 font-bold">{{ total_bookings }}</span>
+            <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-700/80 text-xs font-mono text-slate-300">
+                Active Tickets: <span class="text-indigo-400 font-black">{{ total_bookings }}</span>
             </div>
         </div>
     </div>
@@ -25,80 +25,87 @@
     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {% for st in status_flow %}
         {% set stage_jobs = kanban[st] %}
-        <div class="bg-white border border-zinc-200 rounded-2xl p-4 flex flex-col justify-between min-h-[520px] shadow-xs">
+        <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-4 flex flex-col justify-between min-h-[540px] shadow-xl">
             <div>
                 <!-- Column Header -->
-                <div class="flex items-center justify-between border-b border-zinc-100 pb-3 mb-3">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-3">
                     <div class="flex items-center gap-2">
                         {% if st == 'Requested' %}
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                         {% elif st == 'Accepted' %}
-                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
                         {% elif st == 'On the Way' %}
-                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
                         {% elif st == 'In Progress' %}
-                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
                         {% elif st == 'Completed' %}
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                         {% endif %}
-                        <span class="text-xs font-bold text-zinc-800 uppercase tracking-wider">{{ st }}</span>
+                        <span class="text-xs font-bold text-white uppercase tracking-wider">{{ st }}</span>
                     </div>
-                    <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200">{{ stage_jobs|length }}</span>
+                    <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-slate-800">{{ stage_jobs|length }}</span>
                 </div>
 
                 <!-- Tickets List -->
                 <div class="space-y-3">
                     {% for b in stage_jobs %}
-                    <div class="bg-zinc-50 border border-zinc-200 rounded-xl p-3.5 space-y-2.5 hover:border-zinc-300 transition">
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 space-y-2.5 hover:border-slate-700 transition">
                         <!-- ID & Urgency -->
                         <div class="flex items-center justify-between">
-                            <span class="font-mono text-[11px] font-semibold text-zinc-500">{{ b.id }}</span>
+                            <span class="font-mono text-[11px] font-bold text-slate-400">{{ b.id }}</span>
                             {% if b.urgency == 'Emergency' %}
-                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200">Emergency</span>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-rose-500/10 text-rose-400 border border-rose-500/20">Emergency</span>
                             {% else %}
-                            <span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-zinc-200 text-zinc-700">Standard</span>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800 text-slate-300 border border-slate-700">Standard</span>
                             {% endif %}
                         </div>
 
                         <!-- Category & Assigned Tech -->
                         <div>
-                            <div class="text-xs font-bold text-zinc-900 leading-tight">{{ b.category }}</div>
-                            <div class="text-[11px] text-indigo-600 font-medium mt-0.5">{{ b.provider_name }}</div>
+                            <div class="text-xs font-bold text-white leading-tight">{{ b.category }}</div>
+                            <div class="text-[11px] text-indigo-400 font-semibold mt-0.5">{{ b.provider_name }}</div>
                         </div>
 
                         <!-- Customer Details -->
-                        <div class="text-[11px] text-zinc-600 space-y-0.5 border-t border-zinc-200/60 pt-2">
-                            <div class="font-medium text-zinc-800 truncate">{{ b.client_name }}</div>
-                            <div class="font-mono text-zinc-500 text-[10px]">{{ b.client_phone }}</div>
-                            <div class="truncate text-zinc-500 text-[10px]">{{ b.client_address }}</div>
-                            <div class="text-[10px] text-zinc-600">Slot: <span class="font-mono text-zinc-800">{{ b.slot }}</span></div>
+                        <div class="text-[11px] text-slate-400 space-y-0.5 border-t border-slate-800/80 pt-2">
+                            <div class="font-bold text-slate-200 truncate">{{ b.client_name }}</div>
+                            <div class="font-mono text-slate-400 text-[10px]">{{ b.client_phone }}</div>
+                            <div class="truncate text-slate-500 text-[10px]">{{ b.client_address }}</div>
+                            <div class="text-[10px] text-slate-400">Slot: <span class="font-mono text-white font-medium">{{ b.slot }}</span></div>
                         </div>
 
                         <!-- Action Advancement Button -->
-                        <div class="pt-2 border-t border-zinc-200/60 flex flex-col gap-1.5">
+                        <div class="pt-2 border-t border-slate-800/80 flex flex-col gap-1.5">
                             {% if st == 'Requested' %}
-                            <button onclick="advanceStage('{{ b.id }}', 'Accepted')" class="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center justify-center gap-1 shadow-xs">
+                            <button onclick="advanceStage('{{ b.id }}', 'Accepted')" class="w-full py-1.5 px-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center justify-center gap-1 shadow-xs">
                                 Accept Ticket →
                             </button>
                             {% elif st == 'Accepted' %}
-                            <button onclick="advanceStage('{{ b.id }}', 'On the Way')" class="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white transition flex items-center justify-center gap-1 shadow-xs">
+                            <button onclick="advanceStage('{{ b.id }}', 'On the Way')" class="w-full py-1.5 px-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition flex items-center justify-center gap-1 shadow-xs">
                                 Dispatch Technician →
                             </button>
                             {% elif st == 'On the Way' %}
-                            <button onclick="advanceStage('{{ b.id }}', 'In Progress')" class="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white transition flex items-center justify-center gap-1 shadow-xs">
+                            <button onclick="advanceStage('{{ b.id }}', 'In Progress')" class="w-full py-1.5 px-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white transition flex items-center justify-center gap-1 shadow-xs">
                                 Mark In Progress →
                             </button>
                             {% elif st == 'In Progress' %}
-                            <button onclick="advanceStage('{{ b.id }}', 'Completed')" class="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center gap-1 shadow-xs">
+                            <button onclick="advanceStage('{{ b.id }}', 'Completed')" class="w-full py-1.5 px-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center justify-center gap-1 shadow-xs">
                                 Complete & Generate Bill ✓
                             </button>
                             {% elif st == 'Completed' %}
-                            <a href="{{ url_for('tracking') }}?active_id={{ b.id }}" class="w-full py-1.5 px-2 rounded-lg text-[11px] font-semibold text-center bg-white hover:bg-zinc-100 text-emerald-700 border border-emerald-300 transition block">
+                            <a href="{{ url_for('order_status', booking_code=b.id) }}" class="w-full py-1.5 px-2 rounded-xl text-[11px] font-bold text-center bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 transition block">
                                 View Tax Invoice →
                             </a>
                             {% endif %}
 
-                            <a href="{{ url_for('tracking') }}?active_id={{ b.id }}" class="text-[10px] text-center text-zinc-500 hover:text-zinc-800 py-0.5 transition">
+                            <button type="button" onclick="openTechChatModal('{{ b.id }}', '{{ b.client_name|e }}')" class="w-full py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-slate-800/80 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition flex items-center justify-center gap-1.5 shadow-xs">
+                                <svg class="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span>💬 Chat with Client</span>
+                            </button>
+
+                            <a href="{{ url_for('order_status', booking_code=b.id) }}" class="text-[10px] text-center text-slate-500 hover:text-slate-300 py-0.5 transition">
                                 View Pipeline Details
                             </a>
                         </div>
@@ -107,7 +114,7 @@
                     {% endfor %}
 
                     {% if not stage_jobs %}
-                    <div class="text-center py-12 text-zinc-400 text-xs border border-dashed border-zinc-200 rounded-xl">
+                    <div class="text-center py-12 text-slate-600 text-xs border border-dashed border-slate-800 rounded-2xl">
                         No active items
                     </div>
                     {% endif %}
@@ -115,11 +122,66 @@
             </div>
 
             <!-- Stage Counter -->
-            <div class="mt-4 pt-2 border-t border-zinc-100 text-[10px] text-zinc-400 text-center font-medium">
+            <div class="mt-4 pt-2 border-t border-slate-800/80 text-[10px] text-slate-500 text-center font-medium">
                 Stage {{ loop.index }} of 5
             </div>
         </div>
         {% endfor %}
+    </div>
+
+    <!-- Dedicated Technician Dispatch Chat Modal -->
+    <div id="tech-chat-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-950 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-[scaleIn_0.2s_ease-out]">
+            <!-- Header -->
+            <div class="p-5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/60">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-base shadow-md shadow-indigo-500/30 shrink-0">
+                        💬
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-black text-white">Direct Dispatch Chat</h3>
+                            <span id="modal-order-tag" class="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-indigo-950 text-indigo-300 border border-indigo-800"></span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Client: <strong id="modal-client-name" class="text-slate-200"></strong>
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTechChatModal()" class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Messages Thread Container -->
+            <div id="modal-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[260px] max-h-[380px] bg-slate-900/40 flex flex-col">
+                <div id="modal-chat-loading" class="text-center py-10 text-slate-500 text-xs">
+                    Loading order communication thread...
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="modal-chat-form" onsubmit="handleModalSendChat(event)" class="p-4 border-t border-slate-800/80 bg-slate-900/60 flex items-center gap-2">
+                <input 
+                    type="text" 
+                    id="modal-chat-input" 
+                    placeholder="Reply to client as assigned specialist..." 
+                    required 
+                    autocomplete="off"
+                    class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                >
+                <button 
+                    type="submit" 
+                    id="modal-chat-submit-btn"
+                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold transition flex items-center gap-1 shadow-lg shadow-indigo-600/25 shrink-0"
+                >
+                    <span>Send</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
     </div>
 
 </div>
@@ -146,5 +208,168 @@
             alert("Error updating work order milestone.");
         }
     }
+
+    let activeModalBookingId = null;
+    let modalPollTimer = null;
+
+    function scrollModalChatToBottom() {
+        const container = document.getElementById('modal-chat-messages');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function appendModalBubble(m) {
+        const loading = document.getElementById('modal-chat-loading');
+        if (loading) loading.remove();
+
+        const container = document.getElementById('modal-chat-messages');
+        if (!container) return;
+
+        const isCustomer = m.sender_role === 'customer';
+        const wrapper = document.createElement('div');
+        wrapper.className = isCustomer 
+            ? 'flex flex-col items-end max-w-[85%] self-end' 
+            : 'flex flex-col items-start max-w-[85%] self-start';
+
+        const header = document.createElement('div');
+        header.className = isCustomer 
+            ? 'flex items-center justify-end gap-1.5 mb-1 text-[10px] text-slate-400' 
+            : 'flex items-center gap-1.5 mb-1 text-[10px] text-slate-400';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = isCustomer ? 'font-bold text-indigo-300' : 'font-bold text-slate-200';
+        nameSpan.textContent = m.sender_name;
+
+        const roleBadge = document.createElement('span');
+        roleBadge.className = isCustomer 
+            ? 'text-[9px] px-1.5 py-0.2 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 font-medium'
+            : 'text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700 font-medium';
+        roleBadge.textContent = isCustomer ? 'Customer' : 'Specialist';
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'text-slate-500 text-[9px]';
+        timeSpan.textContent = m.created_at;
+
+        header.appendChild(nameSpan);
+        header.appendChild(roleBadge);
+        header.appendChild(timeSpan);
+
+        const bubble = document.createElement('div');
+        bubble.className = isCustomer 
+            ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl rounded-tr-xs px-4 py-2 text-xs shadow-md shadow-indigo-600/20 break-words text-left'
+            : 'bg-slate-800 text-slate-100 rounded-2xl rounded-tl-xs px-4 py-2 text-xs border border-slate-700/80 shadow-md break-words text-left';
+        bubble.textContent = m.message;
+
+        wrapper.appendChild(header);
+        wrapper.appendChild(bubble);
+        container.appendChild(wrapper);
+        scrollModalChatToBottom();
+    }
+
+    async function loadModalMessages() {
+        if (!activeModalBookingId) return;
+        try {
+            const res = await fetch(`/orders/${encodeURIComponent(activeModalBookingId)}/messages`);
+            const data = await res.json();
+            if (res.ok && data.messages) {
+                const container = document.getElementById('modal-chat-messages');
+                const loading = document.getElementById('modal-chat-loading');
+                if (loading) loading.remove();
+
+                const currentBubbles = container.querySelectorAll('.break-words').length;
+                if (data.messages.length === 0 && currentBubbles === 0) {
+                    container.innerHTML = `
+                        <div id="modal-chat-empty" class="text-center py-10 text-slate-500 text-xs">
+                            <p class="font-semibold text-slate-400">No message history yet.</p>
+                            <p class="text-[11px] text-slate-500 mt-1">Send an update regarding your ETA, arrival notes, or required materials.</p>
+                        </div>
+                    `;
+                } else if (data.messages.length > currentBubbles) {
+                    const empty = document.getElementById('modal-chat-empty');
+                    if (empty) empty.remove();
+
+                    for (let i = currentBubbles; i < data.messages.length; i++) {
+                        appendModalBubble(data.messages[i]);
+                    }
+                }
+            }
+        } catch (err) {
+            // silent catch
+        }
+    }
+
+    function openTechChatModal(bookingId, clientName) {
+        activeModalBookingId = bookingId;
+        document.getElementById('modal-order-tag').textContent = '#' + bookingId;
+        document.getElementById('modal-client-name').textContent = clientName || 'Client';
+        
+        const container = document.getElementById('modal-chat-messages');
+        container.innerHTML = `
+            <div id="modal-chat-loading" class="text-center py-10 text-slate-500 text-xs">
+                Loading messages...
+            </div>
+        `;
+
+        document.getElementById('tech-chat-modal').classList.remove('hidden');
+        document.getElementById('modal-chat-input').focus();
+        loadModalMessages();
+
+        if (modalPollTimer) clearInterval(modalPollTimer);
+        modalPollTimer = setInterval(loadModalMessages, 4000);
+    }
+
+    function closeTechChatModal() {
+        document.getElementById('tech-chat-modal').classList.add('hidden');
+        activeModalBookingId = null;
+        if (modalPollTimer) {
+            clearInterval(modalPollTimer);
+            modalPollTimer = null;
+        }
+    }
+
+    async function handleModalSendChat(e) {
+        e.preventDefault();
+        if (!activeModalBookingId) return;
+
+        const input = document.getElementById('modal-chat-input');
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        const submitBtn = document.getElementById('modal-chat-submit-btn');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            const res = await fetch(`/orders/${encodeURIComponent(activeModalBookingId)}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ message: msg })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                input.value = '';
+                const empty = document.getElementById('modal-chat-empty');
+                if (empty) empty.remove();
+                appendModalBubble(data.message);
+            } else {
+                alert(data.error || "Failed to send message.");
+            }
+        } catch (err) {
+            alert("Error sending message to client.");
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+            input.focus();
+        }
+    }
+
+    // Close modal on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !document.getElementById('tech-chat-modal').classList.contains('hidden')) {
+            closeTechChatModal();
+        }
+    });
 </script>
 {% endblock %}

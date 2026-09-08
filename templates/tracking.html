@@ -1,16 +1,16 @@
-{% extends "base.html" %}
+{% extends "app_layout.html" %}
 
 {% block title %}SmartServe | Track Your Service Request{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="space-y-6 animate-[fadeIn_0.25s_ease-in-out]">
 
     {% if bookings %}
     <!-- Ticket Switcher Bar -->
-    <div class="bg-white border border-zinc-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+    <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
         <div class="flex items-center gap-3 w-full sm:w-auto">
-            <label class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Active Order:</label>
-            <select onchange="switchActiveBooking(this.value)" class="bg-zinc-50 border border-zinc-300 rounded-lg px-3 py-2 text-xs text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-full sm:w-88 transition">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Active Order:</label>
+            <select onchange="switchActiveBooking(this.value)" class="bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-88 transition">
                 {% for b in bookings %}
                 <option value="{{ b.id }}" {% if active_booking and b.id == active_booking.id %}selected{% endif %}>
                     {{ b.id }} — {{ b.category }} ({{ b.client_name }}) [{{ b.status }}]
@@ -18,36 +18,40 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="text-xs text-zinc-500 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="font-medium text-zinc-700">Real-Time Tracking Active</span>
+        <div class="text-xs text-slate-400 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-medium text-slate-300">Real-Time Tracking Active</span>
         </div>
     </div>
 
     {% if active_booking %}
     <!-- Visual 5-Stage Step Progress Stepper -->
-    <div class="bg-white border border-zinc-200/80 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+    <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
         
         <!-- Header Info -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-100 pb-5 gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-5 gap-3">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="font-mono text-xs text-indigo-600 font-bold">{{ active_booking.id }}</span>
+                    <span class="font-mono text-xs text-indigo-400 font-bold">{{ active_booking.id }}</span>
                     {% if active_booking.urgency == 'Emergency' %}
-                    <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold uppercase tracking-wide">🚨 Urgent Request</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-bold uppercase tracking-wide">🚨 Urgent Request</span>
                     {% else %}
-                    <span class="px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-700 text-[10px] font-medium">Standard Scheduled</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-medium border border-slate-700">Standard Scheduled</span>
                     {% endif %}
                 </div>
-                <h2 class="text-xl sm:text-2xl font-bold text-zinc-900 mt-1">{{ active_booking.category }} Service Order</h2>
-                <p class="text-xs text-zinc-500 mt-0.5">
-                    Assigned Specialist: <strong class="text-zinc-800">{{ active_booking.provider_name }}</strong> 
-                    (<span class="font-mono text-zinc-600">{{ active_booking.provider_phone }}</span>) • Appointment Slot: <strong class="text-zinc-800 font-mono">{{ active_booking.slot }}</strong>
+                <h2 class="text-xl sm:text-2xl font-black text-white mt-1">{{ active_booking.category }} Service Order</h2>
+                <p class="text-xs text-slate-400 mt-0.5">
+                    Assigned Specialist: <strong class="text-white">{{ active_booking.provider_name }}</strong> 
+                    (<span class="font-mono text-slate-300">{{ active_booking.provider_phone }}</span>) • Appointment Slot: <strong class="text-indigo-400 font-mono">{{ active_booking.slot }}</strong>
                 </p>
             </div>
             <div class="sm:text-right">
-                <span class="text-[11px] text-zinc-400 block font-medium uppercase tracking-wider">Current Status</span>
-                <span class="text-base sm:text-lg font-bold text-indigo-600 uppercase font-mono">{{ active_booking.status }}</span>
+                <span class="text-[11px] text-slate-500 block font-bold uppercase tracking-wider">Current Status</span>
+                <span class="text-base sm:text-lg font-black text-indigo-400 uppercase font-mono">{{ active_booking.status }}</span>
+                <a href="{{ url_for('order_status', booking_code=active_booking.id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition mt-1">
+                    <span>View Dedicated Stepper</span>
+                    <span>→</span>
+                </a>
             </div>
         </div>
 
@@ -76,35 +80,35 @@
         {% endif %}
 
         <div class="relative py-4">
-            <div class="hidden sm:block absolute top-5 left-6 right-6 h-0.5 bg-zinc-200 z-0"></div>
-            <div class="hidden sm:block absolute top-5 left-6 h-0.5 bg-indigo-600 z-0 transition-all duration-300 {{ progress_width }}"></div>
+            <div class="hidden sm:block absolute top-5 left-6 right-6 h-0.5 bg-slate-800 z-0"></div>
+            <div class="hidden sm:block absolute top-5 left-6 h-0.5 bg-gradient-to-r from-indigo-500 to-violet-500 z-0 transition-all duration-300 {{ progress_width }}"></div>
 
             <div class="grid grid-cols-5 gap-2 relative z-10">
                 {% for st_backend, st_num, st_label in stages %}
                 {% set is_past_or_current = loop.index0 <= current_idx %}
                 {% set is_active = loop.index0 == current_idx %}
                 <div class="flex flex-col items-center text-center">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs {% if is_active %}bg-indigo-600 text-white ring-4 ring-indigo-50 font-bold{% elif is_past_or_current %}bg-indigo-600 text-white{% else %}bg-zinc-100 text-zinc-400 border border-zinc-200{% endif %}">
+                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xs transition-all shadow-md {% if is_active %}bg-gradient-to-tr from-indigo-600 to-violet-600 text-white ring-4 ring-indigo-500/30 font-bold shadow-indigo-500/40{% elif is_past_or_current %}bg-emerald-600 text-white shadow-emerald-600/30{% else %}bg-slate-900 text-slate-500 border border-slate-800{% endif %}">
                         {% if is_past_or_current and not is_active %}✓{% else %}{{ st_num }}{% endif %}
                     </div>
-                    <span class="text-xs font-semibold mt-2 {% if is_past_or_current %}text-zinc-900{% else %}text-zinc-400{% endif %}">{{ st_label }}</span>
+                    <span class="text-xs font-semibold mt-2 {% if is_past_or_current %}text-white{% else %}text-slate-500{% endif %}">{{ st_label }}</span>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Activity Updates (Timeline) -->
-        <div class="pt-4 border-t border-zinc-100">
-            <h4 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Activity Updates</h4>
+        <div class="pt-4 border-t border-slate-800/80">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Activity Updates</h4>
             <div class="space-y-2 font-mono text-xs">
                 {% for h in active_booking.history %}
-                <div class="flex items-center justify-between p-3 rounded-lg bg-zinc-50 border border-zinc-200/70">
+                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
                     <div class="flex items-center gap-3">
-                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
-                        <span class="font-bold text-zinc-800">[{{ h.status }}]</span>
-                        <span class="text-zinc-600 font-sans">{{ h.note }}</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                        <span class="font-bold text-white">[{{ h.status }}]</span>
+                        <span class="text-slate-300 font-sans">{{ h.note }}</span>
                     </div>
-                    <span class="text-[11px] text-zinc-400 font-mono">{{ h.timestamp }}</span>
+                    <span class="text-[11px] text-slate-500 font-mono">{{ h.timestamp }}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -112,21 +116,109 @@
 
     </div>
 
-    <!-- Automated Digital Receipt & Tax Invoice (Linear / Stripe Minimal Style) -->
+    <!-- Direct Dispatch Chat (Customer <-> Assigned Specialist) -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800/80 pb-4 gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-lg shadow-md shadow-indigo-500/30 shrink-0">
+                    💬
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base font-black text-white">Direct Dispatch Chat</h3>
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Live Channel
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Communicating with <strong class="text-white">{{ active_booking.provider_name }}</strong> (Specialist) • Ref: <span class="font-mono text-indigo-400 font-bold">{{ active_booking.id }}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="text-xs text-slate-500 font-mono">
+                Order Direct Channel
+            </div>
+        </div>
+
+        <!-- Chat Scrollable Thread Container -->
+        <div id="chat-messages-container" class="max-h-80 min-h-[180px] overflow-y-auto space-y-3 p-4 bg-slate-900/60 rounded-2xl border border-slate-800/80 flex flex-col">
+            {% if messages %}
+                {% for msg in messages %}
+                    {% if msg.sender_role == 'customer' %}
+                    <!-- Customer bubble on the right (indigo/violet) -->
+                    <div class="flex flex-col items-end max-w-[85%] self-end">
+                        <div class="flex items-center justify-end gap-1.5 mb-1 text-[11px] text-slate-400">
+                            <span class="font-bold text-indigo-300">{{ msg.sender_name }}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 font-medium">Customer</span>
+                            <span class="text-slate-500 text-[10px]">{{ msg.created_at }}</span>
+                        </div>
+                        <div class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl rounded-tr-xs px-4 py-2.5 text-xs shadow-md shadow-indigo-600/20 break-words text-left">
+                            {{ msg.message }}
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Technician bubble on the left (slate/zinc) -->
+                    <div class="flex flex-col items-start max-w-[85%] self-start">
+                        <div class="flex items-center gap-1.5 mb-1 text-[11px] text-slate-400">
+                            <span class="font-bold text-slate-200">{{ msg.sender_name }}</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-medium">Specialist</span>
+                            <span class="text-slate-500 text-[10px]">{{ msg.created_at }}</span>
+                        </div>
+                        <div class="bg-slate-800 text-slate-100 rounded-2xl rounded-tl-xs px-4 py-2.5 text-xs border border-slate-700/80 shadow-md break-words text-left">
+                            {{ msg.message }}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div id="chat-empty-state" class="text-center py-10 my-auto text-slate-500 text-xs">
+                    <p class="font-semibold text-slate-400">No messages in this order thread yet.</p>
+                    <p class="text-[11px] text-slate-500 mt-1">Send a quick note about gate entry, parking instructions, or specific repair concerns.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="chat-form" onsubmit="handleSendChat(event, '{{ active_booking.id }}')" class="flex items-center gap-2 pt-2">
+            <input 
+                type="text" 
+                id="chat-input" 
+                name="message" 
+                placeholder="Type a message to {{ active_booking.provider_name }}..." 
+                required 
+                autocomplete="off"
+                class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            >
+            <button 
+                type="submit" 
+                id="chat-submit-btn"
+                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/25 shrink-0"
+            >
+                <span>Send</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <!-- Automated Digital Receipt & Tax Invoice -->
     {% if active_booking.invoice %}
-    <div id="invoice-printable" class="bg-white border border-zinc-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+    <div id="invoice-printable" class="bg-white text-zinc-900 border-2 border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
         
         <!-- Invoice Header -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-100 pb-5 gap-3">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-200 pb-5 gap-3">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="text-lg font-bold text-zinc-900">SmartServe Platform</span>
+                    <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-sm flex items-center justify-center">S</span>
+                    <span class="text-lg font-black tracking-tight text-zinc-900">SmartServe</span>
                     <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold uppercase">Official Tax Invoice</span>
                 </div>
                 <p class="text-xs text-zinc-500 mt-0.5">Automated Electronic Billing & Fulfillment System</p>
             </div>
             <div class="sm:text-right">
-                <div class="font-mono text-base font-bold text-zinc-900">{{ active_booking.invoice.invoice_no }}</div>
+                <div class="font-mono text-base font-black text-zinc-900">{{ active_booking.invoice.invoice_no }}</div>
                 <div class="text-xs text-zinc-500 font-mono">{{ active_booking.invoice.issue_date }}</div>
             </div>
         </div>
@@ -201,20 +293,20 @@
             <div class="text-[11px] text-zinc-400">
                 Official digital receipt issued upon verified service completion.
             </div>
-            <button onclick="window.print()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition flex items-center gap-1.5 shadow-xs">
+            <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-white transition flex items-center gap-1.5 shadow-xs">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                 </svg>
-                Print Receipt
+                <span>Print Receipt</span>
             </button>
         </div>
 
     </div>
     {% else %}
     <!-- Pending Invoice State -->
-    <div class="bg-white border border-dashed border-zinc-300 rounded-2xl p-8 text-center text-xs text-zinc-500 space-y-1">
-        <p class="font-semibold text-zinc-800">Electronic Tax Invoice Pending</p>
-        <p>Your itemized digital invoice will unlock automatically as soon as the technician completes the service.</p>
+    <div class="bg-slate-950/60 border border-dashed border-slate-800 rounded-3xl p-8 text-center text-xs text-slate-400 space-y-1">
+        <p class="font-bold text-white">Electronic Tax Invoice Pending</p>
+        <p class="text-slate-500">Your itemized digital invoice will unlock automatically as soon as the technician completes the service.</p>
     </div>
     {% endif %}
 
@@ -222,16 +314,16 @@
 
     {% else %}
     <!-- Empty State -->
-    <div class="bg-white border border-zinc-200 rounded-2xl p-12 text-center space-y-3">
-        <div class="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+    <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-12 text-center space-y-3 shadow-xl">
+        <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center mx-auto">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>
         </div>
-        <p class="text-zinc-800 font-bold text-base">No active service appointments found.</p>
-        <p class="text-xs text-zinc-500 max-w-sm mx-auto">Book an appointment or seed sample records using the sandbox at the bottom of the page to observe live tracking.</p>
+        <p class="text-white font-black text-base">No active service appointments found.</p>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto">Book an appointment or seed sample records using the sandbox in the left sidebar to observe live tracking.</p>
         <div class="pt-2">
-            <a href="{{ url_for('index') }}" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs">
+            <a href="{{ url_for('dashboard') }}" class="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-500/25">
                 Schedule a Service →
             </a>
         </div>
@@ -248,5 +340,126 @@
             window.location.href = "{{ url_for('tracking') }}?active_id=" + encodeURIComponent(bookingId);
         }
     }
+
+    function scrollChatToBottom() {
+        const container = document.getElementById('chat-messages-container');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function appendMessageBubble(m) {
+        const emptyState = document.getElementById('chat-empty-state');
+        if (emptyState) emptyState.remove();
+
+        const container = document.getElementById('chat-messages-container');
+        if (!container) return;
+
+        const isCustomer = m.sender_role === 'customer';
+        const wrapper = document.createElement('div');
+        wrapper.className = isCustomer 
+            ? 'flex flex-col items-end max-w-[85%] self-end' 
+            : 'flex flex-col items-start max-w-[85%] self-start';
+
+        const header = document.createElement('div');
+        header.className = isCustomer 
+            ? 'flex items-center justify-end gap-1.5 mb-1 text-[11px] text-slate-400' 
+            : 'flex items-center gap-1.5 mb-1 text-[11px] text-slate-400';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = isCustomer ? 'font-bold text-indigo-300' : 'font-bold text-slate-200';
+        nameSpan.textContent = m.sender_name;
+
+        const roleBadge = document.createElement('span');
+        roleBadge.className = isCustomer 
+            ? 'text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 font-medium'
+            : 'text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-medium';
+        roleBadge.textContent = isCustomer ? 'Customer' : 'Specialist';
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'text-slate-500 text-[10px]';
+        timeSpan.textContent = m.created_at;
+
+        if (isCustomer) {
+            header.appendChild(nameSpan);
+            header.appendChild(roleBadge);
+            header.appendChild(timeSpan);
+        } else {
+            header.appendChild(nameSpan);
+            header.appendChild(roleBadge);
+            header.appendChild(timeSpan);
+        }
+
+        const bubble = document.createElement('div');
+        bubble.className = isCustomer 
+            ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl rounded-tr-xs px-4 py-2.5 text-xs shadow-md shadow-indigo-600/20 break-words text-left'
+            : 'bg-slate-800 text-slate-100 rounded-2xl rounded-tl-xs px-4 py-2.5 text-xs border border-slate-700/80 shadow-md break-words text-left';
+        bubble.textContent = m.message;
+
+        wrapper.appendChild(header);
+        wrapper.appendChild(bubble);
+        container.appendChild(wrapper);
+        scrollChatToBottom();
+    }
+
+    async function handleSendChat(e, bookingId) {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        if (!input) return;
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        const submitBtn = document.getElementById('chat-submit-btn');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            const res = await fetch(`/orders/${encodeURIComponent(bookingId)}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ message: msg })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                input.value = '';
+                appendMessageBubble(data.message);
+            } else {
+                alert(data.error || "Failed to send message.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Network error sending message.");
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+            input.focus();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        scrollChatToBottom();
+    });
+
+    {% if active_booking %}
+    setInterval(async () => {
+        try {
+            const res = await fetch(`/orders/{{ active_booking.id }}/messages`);
+            const data = await res.json();
+            if (res.ok && data.messages) {
+                const container = document.getElementById('chat-messages-container');
+                if (!container) return;
+                const currentCount = container.querySelectorAll('.break-words').length;
+                if (data.messages.length > currentCount) {
+                    for (let i = currentCount; i < data.messages.length; i++) {
+                        appendMessageBubble(data.messages[i]);
+                    }
+                }
+            }
+        } catch (e) {
+            // silent polling catch
+        }
+    }, 5000);
+    {% endif %}
 </script>
 {% endblock %}

@@ -1,104 +1,248 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | SmartServe</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'Menlo', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white">
 
-{% block title %}SmartServe | Sign In{% endblock %}
-
-{% block content %}
-<div class="max-w-md mx-auto py-6 sm:py-10">
-    <div class="bg-white border border-zinc-200/80 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 h-screen w-screen overflow-hidden">
         
-        <!-- Header -->
-        <div class="text-center space-y-1.5">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto shadow-xs">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                </svg>
+        <!-- ========================================================================= -->
+        <!-- LEFT BRAND SHOWCASE PANEL (50% on Desktop, Hidden on Mobile)              -->
+        <!-- ========================================================================= -->
+        <div class="hidden lg:flex lg:col-span-6 relative flex-col justify-between p-12 overflow-hidden border-r border-slate-800/80">
+            
+            <!-- High-Res Lifestyle / Interior Service Background Image -->
+            <div class="absolute inset-0 bg-cover bg-center z-0 scale-105 transform duration-1000" 
+                 style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1800&q=85');">
             </div>
-            <h1 class="text-2xl font-bold text-zinc-900 tracking-tight">Sign in to SmartServe</h1>
-            <p class="text-xs text-zinc-500">Access your service bookings or technician dispatch deck</p>
+
+            <!-- Deep Dark-Indigo Backdrop Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-tr from-slate-950/95 via-indigo-950/90 to-purple-950/80 backdrop-blur-[2px] z-0"></div>
+
+            <!-- Ambient Glow Blur Orbs -->
+            <div class="absolute -top-20 -left-20 w-80 h-80 rounded-full filter blur-3xl opacity-30 animate-pulse bg-indigo-500 pointer-events-none z-0"></div>
+            <div class="absolute -bottom-20 -right-20 w-80 h-80 rounded-full filter blur-3xl opacity-30 animate-pulse bg-violet-600 pointer-events-none z-0"></div>
+
+            <!-- Top Left Brand Emblem -->
+            <div class="relative z-10">
+                <a href="{{ url_for('landing') }}" class="inline-flex items-center space-x-3 group">
+                    <div class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform duration-200">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg font-black tracking-tight text-white group-hover:text-indigo-300 transition">SmartServe</span>
+                            <span class="px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Saidpur Hub</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-medium">Autonomous Dispatch & Maintenance</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Center Value Proposition -->
+            <div class="relative z-10 space-y-6 max-w-lg">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-slate-200 shadow-md backdrop-blur-md">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Direct Access to Verified Trade Specialists</span>
+                </div>
+
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+                    Precision home repairs and specialist dispatch across Saidpur.
+                </h1>
+
+                <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                    Connect with licensed electrical, plumbing, HVAC, appliance, and carpentry professionals with transparent upfront pricing and real-time GPS dispatch.
+                </p>
+
+                <!-- Live Trust Chips -->
+                <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <div class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-xs font-semibold text-slate-200 backdrop-blur-md shadow-sm">
+                        <span>⚡</span>
+                        <span>15-min Dispatch Guarantee</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-xs font-semibold text-slate-200 backdrop-blur-md shadow-sm">
+                        <span>🛡️</span>
+                        <span>100% Verified Tradespeople</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Micro-Testimonial Badge -->
+            <div class="relative z-10 bg-slate-900/80 border border-white/10 rounded-2xl p-4 backdrop-blur-md shadow-xl max-w-lg">
+                <p class="text-xs text-slate-300 italic leading-relaxed">
+                    "SmartServe dispatched a certified electrician within 12 minutes during a main breaker failure. Seamless digital invoicing and professional execution."
+                </p>
+                <div class="flex items-center justify-between mt-3 pt-2 border-t border-white/10 text-[11px]">
+                    <span class="font-bold text-white">Lt. Col. R. Ahmed</span>
+                    <span class="text-slate-400">Cantonment Housing Society</span>
+                </div>
+            </div>
+
         </div>
 
-        {% if error %}
-        <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-            <svg class="w-4 h-4 shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <span>{{ error }}</span>
-        </div>
-        {% endif %}
+        <!-- ========================================================================= -->
+        <!-- RIGHT INTERACTIVE AUTH CANVAS (50% on Desktop, 100% on Mobile)            -->
+        <!-- ========================================================================= -->
+        <div class="col-span-12 lg:col-span-6 bg-slate-950 flex flex-col justify-between p-6 sm:p-10 lg:p-12 overflow-y-auto relative">
+            
+            <!-- Ambient Subtle Neon Glow Orb -->
+            <div class="absolute top-1/4 right-1/4 w-72 h-72 rounded-full filter blur-3xl opacity-20 bg-indigo-500 pointer-events-none"></div>
 
-        <!-- 1-Click Demo Login Cards -->
-        <div class="bg-zinc-50 border border-zinc-200 rounded-xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
-                    1-Click Demo Access
+            <!-- Minimal Elegant Top Header -->
+            <header class="w-full flex items-center justify-between pb-6 relative z-10">
+                <!-- Mobile Brand Display (Visible on small screens) -->
+                <a href="{{ url_for('landing') }}" class="flex lg:hidden items-center space-x-2.5">
+                    <div class="h-8 w-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white flex items-center justify-center shadow-md">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <span class="text-base font-extrabold text-white">SmartServe</span>
+                </a>
+
+                <div class="hidden lg:block"></div>
+
+                <!-- Minimal Elegant Right Switcher Link -->
+                <a href="{{ url_for('signup') }}" class="text-xs font-semibold text-slate-400 hover:text-white transition flex items-center gap-1.5 group">
+                    <span>New to SmartServe?</span>
+                    <span class="text-indigo-400 group-hover:text-indigo-300 font-bold underline">Create Account →</span>
+                </a>
+            </header>
+
+            <!-- Center Form Container -->
+            <main class="w-full max-w-md mx-auto my-auto space-y-6 relative z-10">
+                
+                <div class="space-y-1.5">
+                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Welcome back</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">Sign in to manage your appointments or view your technician deck.</p>
+                </div>
+
+                <!-- Flash Error Alert -->
+                {% if error %}
+                <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3">
+                    <svg class="w-4 h-4 shrink-0 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>{{ error }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Role Selector Tabs (Customer vs Technician) -->
+                <div class="space-y-2">
+                    <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Select Persona</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" id="role-btn-customer" onclick="selectLoginPersona('customer')"
+                                class="py-2.5 px-3 rounded-xl border border-indigo-500 bg-indigo-500/10 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <span>👤</span>
+                            <span>Customer</span>
+                        </button>
+                        <button type="button" id="role-btn-technician" onclick="selectLoginPersona('technician')"
+                                class="py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-400 font-semibold text-xs transition-all flex items-center justify-center gap-2 hover:text-white">
+                            <span>🔧</span>
+                            <span>Technician</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Standard Credential Form -->
+                <form action="{{ url_for('login') }}" method="POST" class="space-y-4">
+                    <input type="hidden" name="next" value="{{ next or '' }}">
+
+                    <!-- Email Field -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Email Address</label>
+                        <div class="relative">
+                            <input type="email" name="email" id="login-email-input" required 
+                                   value="customer@smartserve.local" autocomplete="email" placeholder="customer@smartserve.local"
+                                   class="w-full bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none font-medium text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Password</label>
+                        </div>
+                        <div class="relative">
+                            <input type="password" name="password" id="login-password-input" required 
+                                   value="pass123" autocomplete="current-password" placeholder="••••••••"
+                                   class="w-full bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 rounded-xl px-4 py-3 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none font-medium text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Submit Action Button -->
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-600/30 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-xs">
+                        <span>Sign In to Dashboard</span>
+                        <span>→</span>
+                    </button>
+                </form>
+
+                <!-- Bottom Alternate Switcher -->
+                <div class="text-center pt-3 border-t border-slate-800/80 text-xs text-slate-400">
+                    Need an account? 
+                    <a href="{{ url_for('signup') }}" class="text-indigo-400 hover:text-indigo-300 font-bold transition ml-1">
+                        Sign Up Free →
+                    </a>
+                </div>
+
+            </main>
+
+            <!-- Bottom Security Footer -->
+            <footer class="w-full text-center text-[11px] text-slate-500 pt-6 border-t border-slate-800/60 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <span>SmartServe Platform • Saidpur Cantonment</span>
+                <span class="flex items-center gap-1 text-slate-400">
+                    <span class="text-emerald-400">🔒</span>
+                    <span>256-bit Secure TLS Encryption</span>
                 </span>
-                <span class="text-[10px] text-zinc-400 font-medium">Instant Login</span>
-            </div>
+            </footer>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <!-- Customer Persona -->
-                <form action="{{ url_for('login') }}" method="POST">
-                    <input type="hidden" name="demo_role" value="customer">
-                    <input type="hidden" name="next" value="{{ next }}">
-                    <button type="submit" class="w-full text-left p-3 rounded-lg bg-white border border-zinc-200 hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500/20 transition group">
-                        <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-md bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center">SI</span>
-                            <div>
-                                <div class="text-xs font-bold text-zinc-900 group-hover:text-indigo-600 transition">Customer</div>
-                                <div class="text-[10px] text-zinc-500 truncate">Suaib Islam</div>
-                            </div>
-                        </div>
-                    </button>
-                </form>
-
-                <!-- Technician Persona -->
-                <form action="{{ url_for('login') }}" method="POST">
-                    <input type="hidden" name="demo_role" value="technician">
-                    <input type="hidden" name="next" value="{{ next }}">
-                    <button type="submit" class="w-full text-left p-3 rounded-lg bg-white border border-zinc-200 hover:border-indigo-500 hover:ring-1 hover:ring-indigo-500/20 transition group">
-                        <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded-md bg-purple-50 text-purple-700 font-bold text-xs flex items-center justify-center">KR</span>
-                            <div>
-                                <div class="text-xs font-bold text-zinc-900 group-hover:text-indigo-600 transition">Technician</div>
-                                <div class="text-[10px] text-zinc-500 truncate">Kazi Rashedul</div>
-                            </div>
-                        </div>
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <div class="relative flex items-center justify-center">
-            <div class="border-t border-zinc-200 w-full"></div>
-            <span class="bg-white px-3 text-[11px] text-zinc-400 font-medium uppercase tracking-wider relative">Or with credentials</span>
-        </div>
-
-        <!-- Standard Form -->
-        <form action="{{ url_for('login') }}" method="POST" class="space-y-4 text-xs">
-            <input type="hidden" name="next" value="{{ next }}">
-
-            <div>
-                <label class="block font-medium text-zinc-700 mb-1">Email Address</label>
-                <input type="email" name="email" required placeholder="customer@smartserve.local" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-            </div>
-
-            <div>
-                <label class="block font-medium text-zinc-700 mb-1">Password</label>
-                <input type="password" name="password" required placeholder="••••••••" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2.5 text-zinc-900 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-            </div>
-
-            <button type="submit" class="w-full py-2.5 px-4 rounded-lg font-semibold text-xs bg-indigo-600 hover:bg-indigo-700 text-white transition shadow-xs">
-                Sign In
-            </button>
-        </form>
-
-        <div class="text-center pt-2 border-t border-zinc-100 text-xs text-zinc-500">
-            Don't have an account? 
-            <a href="{{ url_for('signup') }}" class="text-indigo-600 hover:text-indigo-700 font-semibold transition">Create an account</a>
         </div>
 
     </div>
-</div>
-{% endblock %}
 
+    <!-- Script for Persona Selector -->
+    <script>
+        function selectLoginPersona(role) {
+            const btnCust = document.getElementById('role-btn-customer');
+            const btnTech = document.getElementById('role-btn-technician');
+            const emailInput = document.getElementById('login-email-input');
+
+            if (role === 'technician') {
+                btnTech.className = "py-2.5 px-3 rounded-xl border border-purple-500 bg-purple-500/10 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm";
+                btnCust.className = "py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-400 font-semibold text-xs transition-all flex items-center justify-center gap-2 hover:text-white";
+                emailInput.value = "tech@smartserve.local";
+                emailInput.placeholder = "tech@smartserve.local";
+            } else {
+                btnCust.className = "py-2.5 px-3 rounded-xl border border-indigo-500 bg-indigo-500/10 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm";
+                btnTech.className = "py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-400 font-semibold text-xs transition-all flex items-center justify-center gap-2 hover:text-white";
+                emailInput.value = "customer@smartserve.local";
+                emailInput.placeholder = "customer@smartserve.local";
+            }
+        }
+    </script>
+
+</body>
+</html>

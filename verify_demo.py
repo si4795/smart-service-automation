@@ -1,6 +1,5 @@
 """
-BAUST CSE FEST 2026 - Demo Verification Pipeline
-Tests all endpoints, matching math, double-booking shield, 5-stage lifecycle, and invoicing.
+Verification script for SmartServe booking, scheduling, and billing workflows.
 """
 import urllib.request
 import urllib.parse
@@ -34,7 +33,7 @@ def post(path: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
 
 def main() -> None:
     print("=" * 65)
-    print("   BAUST CSE FEST 2026 - SMART HOME AUTOMATION PIPELINE TEST   ")
+    print("         SMARTSERVE END-TO-END WORKFLOW VERIFICATION          ")
     print("=" * 65)
 
     results = []

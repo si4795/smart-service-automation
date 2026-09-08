@@ -227,7 +227,8 @@ class TestSmartServiceAutomation(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         html = resp.get_data(as_text=True)
         self.assertIn("Home repairs and maintenance", html)
-        self.assertIn("Explore as Customer", html)
+        self.assertIn("Sign In to Portal", html)
+        self.assertIn("Create Account", html)
 
         # Authenticated Customer: redirects to /dashboard
         with self.app.session_transaction() as sess:
@@ -273,6 +274,243 @@ class TestSmartServiceAutomation(unittest.TestCase):
         self.assertTrue(prov["portfolio_video"].startswith("http"))
         self.assertIn("completed_tasks", prov)
 
+    def test_sequential_user_journey_routes(self):
+        """Verifies multi-page sequential flow: /services/<cat> -> /checkout/<id> -> /orders/<code>."""
+        # Verify route guard redirects unauthenticated users
+        unauth_resp = self.app.get("/services/electrical")
+        self.assertEqual(unauth_resp.status_code, 302)
+        self.assertIn("/login", unauth_resp.location)
+
+        # Authenticate as Customer
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-cust-01"
+            sess["user_role"] = "customer"
+
+        # 1. Specialists Catalog
+        resp_cat = self.app.get("/services/electrical?date=2026-09-08&time=14:00")
+        self.assertEqual(resp_cat.status_code, 200)
+        html_cat = resp_cat.get_data(as_text=True)
+        self.assertIn("Available Specialists", html_cat)
+        self.assertIn("Electrical Engineering", html_cat)
+
+        # 2. Dedicated Checkout Page
+        resp_checkout = self.app.get("/checkout/prov-elec-01?date=2026-09-08&time=14:00&urgency=Normal")
+        self.assertEqual(resp_checkout.status_code, 200)
+        html_checkout = resp_checkout.get_data(as_text=True)
+        self.assertIn("Order Summary", html_checkout)
+        self.assertIn("Total Payable", html_checkout)
+
+        # 3. Post Checkout & Scheduling
+        resp_post = self.app.post("/checkout", data={
+            "provider_id": "prov-elec-01",
+            "slot_date": "2026-09-08",
+            "slot_time": "14:00",
+            "urgency": "Normal",
+            "client_name": "Sequential Flow Tester",
+            "client_phone": "+880 1711-556677",
+            "client_address": "Quarter 4, Cantonment Housing",
+            "notes": "Testing sequential flow booking"
+        }, headers={"X-Requested-With": "XMLHttpRequest"})
+        self.assertEqual(resp_post.status_code, 200)
+        booking_data = resp_post.get_json()
+        self.assertIsNotNone(booking_data)
+        assert booking_data is not None
+        b_code = booking_data["booking"]["id"]
+
+        # 4. Dedicated Order Tracking Page
+        resp_order = self.app.get(f"/orders/{b_code}")
+        self.assertEqual(resp_order.status_code, 200)
+        html_order = resp_order.get_data(as_text=True)
+        self.assertIn("Order #", html_order)
+        self.assertIn("Request Submitted", html_order)
+        self.assertIn("Sequential Flow Tester", html_order)
+
+        # 5. Collision Shield enforcement on same slot
+        resp_collision = self.app.post("/checkout", data={
+            "provider_id": "prov-elec-01",
+            "slot_date": "2026-09-08",
+            "slot_time": "14:00",
+            "urgency": "Normal",
+            "client_name": "Conflict Client",
+            "client_phone": "+880 1799-000000",
+            "client_address": "Cantonment Area"
+        }, headers={"X-Requested-With": "XMLHttpRequest"})
+        self.assertEqual(resp_collision.status_code, 409)
+
+    def test_user_profile_management(self):
+        """Verifies GET/POST /profile authentication, field updates, and SQLite persistence."""
+        # Unauthenticated redirect
+        unauth = self.app.get("/profile")
+        self.assertEqual(unauth.status_code, 302)
+        self.assertIn("/login", unauth.location)
+
+        # Authenticate as customer
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-cust-01"
+            sess["user_role"] = "customer"
+
+        # GET Profile
+        resp = self.app.get("/profile")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("Personal & Contact Details", html)
+        self.assertIn("customer@smartserve.local", html)
+
+        # POST Profile update
+        post_resp = self.app.post("/profile", data={
+            "action": "update_profile",
+            "name": "Suaib Pro Islam",
+            "phone": "+880 1711-998877",
+            "address": "Cantonment Officers Quarter #10"
+        }, follow_redirects=True)
+        self.assertEqual(post_resp.status_code, 200)
+        self.assertIn("Changes Saved", post_resp.get_data(as_text=True))
+
+        # Direct database verification
+        updated = db.get_user_by_id("usr-cust-01")
+        self.assertIsNotNone(updated)
+        assert updated is not None
+        self.assertEqual(updated["name"], "Suaib Pro Islam")
+        self.assertEqual(updated["phone"], "+880 1711-998877")
+        self.assertEqual(updated["address"], "Cantonment Officers Quarter #10")
+        self.assertEqual(updated["avatar"], "SP")
+
+    def test_in_app_dispatch_chat(self):
+        """Verifies customer and technician messaging, database persistence, and API endpoints."""
+        booking, err = db.create_booking(
+            provider_id="prov-elec-01",
+            slot="2026-09-08 17:00",
+            urgency="Normal",
+            client_name="Chat Test Client",
+            client_phone="+880 1700-554433",
+            client_address="Saidpur Cantonment Gate 2"
+        )
+        self.assertIsNone(err)
+        assert booking is not None
+        b_code = booking["id"]
+
+        # 1. Customer sends message
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-cust-01"
+            sess["user_role"] = "customer"
+
+        cust_resp = self.app.post(
+            f"/orders/{b_code}/messages",
+            json={"message": "Please use the west gate entrance."},
+            headers={"X-Requested-With": "XMLHttpRequest"}
+        )
+        self.assertEqual(cust_resp.status_code, 200)
+        cust_data = cust_resp.get_json()
+        self.assertIsNotNone(cust_data)
+        assert cust_data is not None
+        self.assertTrue(cust_data["success"])
+        self.assertEqual(cust_data["message"]["sender_role"], "customer")
+        self.assertEqual(cust_data["message"]["message"], "Please use the west gate entrance.")
+
+        # 2. Technician sends reply
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-tech-01"
+            sess["user_role"] = "technician"
+
+        tech_resp = self.app.post(
+            f"/orders/{b_code}/messages",
+            json={"message": "Acknowledged. Approaching west gate now."},
+            headers={"X-Requested-With": "XMLHttpRequest"}
+        )
+        self.assertEqual(tech_resp.status_code, 200)
+        tech_data = tech_resp.get_json()
+        self.assertIsNotNone(tech_data)
+        assert tech_data is not None
+        self.assertEqual(tech_data["message"]["sender_role"], "technician")
+
+        # 3. Fetch messages via GET
+        get_resp = self.app.get(f"/orders/{b_code}/messages")
+        self.assertEqual(get_resp.status_code, 200)
+        thread = get_resp.get_json()
+        self.assertIsNotNone(thread)
+        assert thread is not None
+        self.assertEqual(len(thread["messages"]), 2)
+        self.assertEqual(thread["messages"][0]["message"], "Please use the west gate entrance.")
+        self.assertEqual(thread["messages"][1]["message"], "Acknowledged. Approaching west gate now.")
+
+        # 4. Direct SQLite verification
+        db_messages = db.get_messages(b_code)
+        self.assertEqual(len(db_messages), 2)
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as cnt FROM messages WHERE booking_code = ?", (b_code,))
+            row = cursor.fetchone()
+            self.assertEqual(row["cnt"], 2)
+
+    def test_password_rotation_security(self):
+        """Verifies old password validation, minimum length check, and secure credential rotation."""
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-cust-01"
+            sess["user_role"] = "customer"
+
+        # 1. Reject invalid old password
+        bad_old = self.app.post("/profile", data={
+            "action": "update_password",
+            "old_password": "completely_wrong_pass",
+            "new_password": "brandnewpassword123",
+            "confirm_password": "brandnewpassword123"
+        }, follow_redirects=True)
+        self.assertEqual(bad_old.status_code, 200)
+        self.assertIn("Current password does not match.", bad_old.get_data(as_text=True))
+        # Ensure password unchanged
+        self.assertIsNotNone(db.authenticate_user("customer@smartserve.local", "pass123"))
+
+        # 2. Reject short new password (< 6 chars)
+        short_pw = self.app.post("/profile", data={
+            "action": "update_password",
+            "old_password": "pass123",
+            "new_password": "123",
+            "confirm_password": "123"
+        }, follow_redirects=True)
+        self.assertEqual(short_pw.status_code, 200)
+        self.assertIn("at least 6 characters", short_pw.get_data(as_text=True))
+
+        # 3. Reject mismatched confirm password
+        mismatch_pw = self.app.post("/profile", data={
+            "action": "update_password",
+            "old_password": "pass123",
+            "new_password": "validnewpass123",
+            "confirm_password": "differentpass123"
+        }, follow_redirects=True)
+        self.assertEqual(mismatch_pw.status_code, 200)
+        self.assertIn("New passwords do not match.", mismatch_pw.get_data(as_text=True))
+
+        # 4. Successful rotation with correct old password
+        good_update = self.app.post("/profile", data={
+            "action": "update_password",
+            "old_password": "pass123",
+            "new_password": "brandnewpassword123",
+            "confirm_password": "brandnewpassword123"
+        }, follow_redirects=True)
+        self.assertEqual(good_update.status_code, 200)
+        self.assertIn("Security credentials updated successfully.", good_update.get_data(as_text=True))
+
+        # Verify authentication state
+        self.assertIsNotNone(db.authenticate_user("customer@smartserve.local", "brandnewpassword123"))
+        self.assertIsNone(db.authenticate_user("customer@smartserve.local", "pass123"))
+
+        # Revert back to pass123 for other tests
+        db.update_user_profile(
+            user_id="usr-cust-01",
+            password="pass123",
+            old_password="brandnewpassword123"
+        )
+
+    def test_sqlite_messages_table_schema(self):
+        """Verifies messages table exists in smartserve.db with expected column schema."""
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(messages)")
+            cols = {r["name"] for r in cursor.fetchall()}
+            for col in ["id", "booking_code", "sender_id", "sender_role", "sender_name", "message", "created_at"]:
+                self.assertIn(col, cols)
+
 if __name__ == "__main__":
     unittest.main()
+
 
