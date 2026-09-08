@@ -178,6 +178,48 @@ class TestSmartServiceAutomation(unittest.TestCase):
         assert created is not None
         self.assertEqual(created["name"], "Mahmudur Rahman")
 
+    def test_sqlite_persistence_file_and_schema(self):
+        """Verifies smartserve.db file exists on disk and standard 4 tables are present."""
+        import os
+        from database import DB_PATH
+        self.assertTrue(os.path.exists(DB_PATH))
+        self.assertGreater(os.path.getsize(DB_PATH), 0)
+
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [r["name"] for r in cursor.fetchall()]
+            for expected_tbl in ["users", "technicians", "bookings", "invoices"]:
+                self.assertIn(expected_tbl, tables)
+
+    def test_sqlite_relational_invoices_table(self):
+        """Verifies completion of booking inserts an official record in invoices table."""
+        booking, err = db.create_booking(
+            provider_id="prov-elec-01",
+            slot="2026-09-08 18:00",
+            urgency="Emergency",
+            client_name="SQLite Tester",
+            client_phone="+880 1700-112233",
+            client_address="Saidpur Cantonment"
+        )
+        self.assertIsNone(err)
+        assert booking is not None
+        b_id = booking["id"]
+
+        # Advance through all stages
+        for s in ["Accepted", "On the Way", "In Progress", "Completed"]:
+            db.update_status(b_id, s)
+
+        # Directly query invoices table in SQLite
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM invoices WHERE booking_id = ?", (b_id,))
+            inv_row = cursor.fetchone()
+            self.assertIsNotNone(inv_row)
+            assert inv_row is not None
+            self.assertEqual(inv_row["booking_id"], b_id)
+            self.assertGreater(inv_row["total_amount"], 0)
+
 if __name__ == "__main__":
     unittest.main()
 

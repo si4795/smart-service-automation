@@ -127,6 +127,7 @@ def book():
     if not provider_id or not slot:
         return jsonify({"success": False, "error": "Provider ID and appointment slot are required."}), 400
 
+    user_id = user["id"] if user else None
     booking, err = db.create_booking(
         provider_id=provider_id,
         slot=slot,
@@ -134,7 +135,8 @@ def book():
         client_name=client_name,
         client_phone=client_phone,
         client_address=client_address,
-        notes=notes
+        notes=notes,
+        user_id=user_id
     )
 
     if err or booking is None:
@@ -184,6 +186,7 @@ def auto_assign():
             "error": f"No technicians currently available in '{category}' for slot {slot}."
         }), 409
 
+    user_id = user["id"] if user else None
     booking, err = db.create_booking(
         provider_id=best_candidate.get("id", ""),
         slot=slot,
@@ -191,7 +194,8 @@ def auto_assign():
         client_name=client_name,
         client_phone=client_phone,
         client_address=client_address,
-        notes=notes
+        notes=notes,
+        user_id=user_id
     )
 
     if err or booking is None:

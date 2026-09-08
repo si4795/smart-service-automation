@@ -13,7 +13,7 @@ def calculate_match_score(provider: Dict[str, Any], urgency: str = "Normal") -> 
     """
     rating = float(provider.get("rating", 0.0))
     distance = float(provider.get("distance_km", 0.0))
-    price = float(provider.get("price", 0.0))
+    price = float(provider.get("price") if provider.get("price") is not None else provider.get("base_price", 0.0))
 
     base_score = (rating * 25.0) - (distance * 6.0) - (price * 0.015)
     urgency_boost = 0.0
@@ -75,7 +75,7 @@ def rank_providers(
         c["dynamic_badges"] = badges
 
     available_candidates.sort(
-        key=lambda x: (x["score"], -x.get("active_jobs_count", 0)),
+        key=lambda x: (x["score"], -x.get("active_jobs_count", x.get("active_jobs", 0))),
         reverse=True
     )
 
