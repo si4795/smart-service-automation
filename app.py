@@ -78,13 +78,14 @@ def book():
         notes=notes
     )
 
-    if err:
-        return jsonify({"success": False, "error": err}), 409
+    if err or booking is None:
+        return jsonify({"success": False, "error": err or "Booking reservation failed."}), 409
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
         return jsonify({"success": True, "booking": booking})
 
-    return redirect(url_for("tracking", active_id=booking["id"]))
+    booking_id = booking.get("id") if (booking is not None and isinstance(booking, dict)) else ""
+    return redirect(url_for("tracking", active_id=booking_id))
 
 @app.route("/auto-assign-emergency", methods=["POST"])
 def auto_assign():
@@ -104,14 +105,14 @@ def auto_assign():
     all_cat_providers = db.get_providers(category=category)
     best_candidate = auto_assign_emergency(all_cat_providers, category, slot)
 
-    if not best_candidate:
+    if best_candidate is None or not isinstance(best_candidate, dict):
         return jsonify({
             "success": False,
             "error": f"No technicians currently available for {category} at {slot} due to existing bookings."
         }), 409
 
     booking, err = db.create_booking(
-        provider_id=best_candidate["id"],
+        provider_id=best_candidate.get("id", ""),
         slot=slot,
         urgency="Emergency",
         client_name=client_name,
@@ -120,17 +121,18 @@ def auto_assign():
         notes=notes
     )
 
-    if err:
-        return jsonify({"success": False, "error": err}), 409
+    if err or booking is None:
+        return jsonify({"success": False, "error": err or "Failed to create emergency reservation."}), 409
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
         return jsonify({
             "success": True,
             "booking": booking,
-            "assigned_provider": best_candidate["name"]
+            "assigned_provider": best_candidate.get("name", "Assigned Technician")
         })
 
-    return redirect(url_for("tracking", active_id=booking["id"]))
+    booking_id = booking.get("id") if (booking is not None and isinstance(booking, dict)) else ""
+    return redirect(url_for("tracking", active_id=booking_id))
 
 @app.route("/provider", methods=["GET"])
 def provider():
@@ -176,8 +178,8 @@ def update_status(booking_id, new_status):
     [Requested] -> [Accepted] -> [On the Way] -> [In Progress] -> [Completed]
     """
     booking, err = db.update_status(booking_id, new_status)
-    if err:
-        return jsonify({"success": False, "error": err}), 400
+    if err or booking is None:
+        return jsonify({"success": False, "error": err or "Booking not found."}), 400
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
         return jsonify({"success": True, "booking": booking})

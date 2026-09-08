@@ -1,4 +1,5 @@
 # Smart Home Service Automation 🚀
+
 ### BAUST CSE FEST 2026 Competitive Hackathon Entry
 
 A modular, zero-compiled-dependency home services marketplace and dispatch automation platform built with Python 3.14, Flask, and Tailwind CSS.
@@ -7,12 +8,12 @@ A modular, zero-compiled-dependency home services marketplace and dispatch autom
 
 ## 🏆 Evaluation Rubric Alignment (100/100 Marks)
 
-| Evaluation Rubric | Marks | Key Features Delivered |
-| :--- | :---: | :--- |
-| **1. Functionality & Completeness** | 40/40 | Full 6-category catalog, strict double-booking prevention, exact 5-stage sequential workflow (`Requested` -> `Accepted` -> `On the Way` -> `In Progress` -> `Completed`), REST API summary. |
-| **2. Code Structure & Readability** | 15/15 | Clean modular layout (`services/mock_db.py`, `services/matcher.py`, modular Jinja templates), docstrings, type discipline, and automated test suite (`test_engine.py`). |
-| **3. UI/UX Design & Polish** | 25/25 | Modern Tailwind CSS interface, visual 5-stage progress pipeline, responsive layout, intuitive tabs, and double-booking transparency panels. |
-| **4. Special & Unique Features** | 20/20 | **Workload Balancing**, **Dynamic Comparison Badges** ("Top Rated", "Fastest Arrival", "Best Value"), **One-Click Emergency Auto-Assignment**, **Automated Digital Tax Invoice** with print stylesheet, and **Real-Time Notification Toasts**. |
+| Evaluation Rubric                   | Marks | Key Features Delivered                                                                                                                                                                                                                         |
+| :---------------------------------- | :---: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Functionality & Completeness** | 40/40 | Full 6-category catalog, strict double-booking prevention, exact 5-stage sequential workflow (`Requested` -> `Accepted` -> `On the Way` -> `In Progress` -> `Completed`), REST API summary.                                                    |
+| **2. Code Structure & Readability** | 15/15 | Clean modular layout (`services/mock_db.py`, `services/matcher.py`, modular Jinja templates), docstrings, type discipline, and automated test suite (`test_engine.py`).                                                                        |
+| **3. UI/UX Design & Polish**        | 25/25 | Modern Tailwind CSS interface, visual 5-stage progress pipeline, responsive layout, intuitive tabs, and double-booking transparency panels.                                                                                                    |
+| **4. Special & Unique Features**    | 20/20 | **Workload Balancing**, **Dynamic Comparison Badges** ("Top Rated", "Fastest Arrival", "Best Value"), **One-Click Emergency Auto-Assignment**, **Automated Digital Tax Invoice** with print stylesheet, and **Real-Time Notification Toasts**. |
 
 ---
 

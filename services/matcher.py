@@ -98,3 +98,4 @@ def auto_assign_emergency(providers, category, requested_slot):
     if available:
         return available[0]
     return None
+

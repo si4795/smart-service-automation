@@ -10,7 +10,7 @@
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
         <div class="flex items-center gap-3 w-full sm:w-auto">
             <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Booking:</label>
-            <select onchange="window.location.href='{{ url_for('tracking') }}?active_id=' + this.value" class="bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-80">
+            <select onchange="switchActiveBooking(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-80">
                 {% for b in bookings %}
                 <option value="{{ b.id }}" {% if active_booking and b.id == active_booking.id %}selected{% endif %}>
                     {{ b.id }} — {{ b.category }} ({{ b.client_name }}) [{{ b.status }}]
@@ -68,9 +68,16 @@
         {% elif active_booking.status == 'Completed' %}{% set current_idx = 4 %}
         {% endif %}
 
+        {% set progress_width = "w-0" %}
+        {% if current_idx == 1 %}{% set progress_width = "w-1/4" %}
+        {% elif current_idx == 2 %}{% set progress_width = "w-2/4" %}
+        {% elif current_idx == 3 %}{% set progress_width = "w-3/4" %}
+        {% elif current_idx == 4 %}{% set progress_width = "w-full" %}
+        {% endif %}
+
         <div class="relative py-4">
             <div class="hidden sm:block absolute top-1/2 left-0 right-0 h-1 bg-slate-800 -translate-y-1/2 z-0"></div>
-            <div class="hidden sm:block absolute top-1/2 left-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 -translate-y-1/2 z-0 transition-all duration-500" style="width: {{ (current_idx / 4) * 100 }}%;"></div>
+            <div class="hidden sm:block absolute top-1/2 left-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 -translate-y-1/2 z-0 transition-all duration-500 {{ progress_width }}"></div>
 
             <div class="grid grid-cols-5 gap-2 relative z-10">
                 {% for st_name, st_num, st_desc in stages %}
@@ -227,4 +234,14 @@
     {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function switchActiveBooking(bookingId) {
+        if (bookingId) {
+            window.location.href = "{{ url_for('tracking') }}?active_id=" + encodeURIComponent(bookingId);
+        }
+    }
+</script>
 {% endblock %}

@@ -481,3 +481,4 @@ class MockDB:
         return len(self.bookings)
 
 db = MockDB()
+

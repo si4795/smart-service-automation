@@ -9,7 +9,9 @@ This changelog chronologically records all development milestones, features, and
 ---
 
 ## [Milestone 4 - Hour 7-8] - Submission Polish & Documentation
+
 ### Added
+
 - **Formal Hackathon Documentation**:
   - Detailed `CHANGELOG.md` documenting all functional modules, algorithms, and bonus features.
   - Comprehensive `README.md` with judge demo instructions, architectural diagrams, and rubric mapping.
@@ -20,7 +22,9 @@ This changelog chronologically records all development milestones, features, and
 ---
 
 ## [Milestone 3 - Hour 5-6] - Provider Dashboard, Tracking Pipeline & Automated Invoicing
+
 ### Added
+
 - **Technician Kanban Workflow Dashboard (`templates/provider.html`)**:
   - Live 5-column operational board tracking service tickets through:
     `[Requested] -> [Accepted] -> [On the Way] -> [In Progress] -> [Completed]`.
@@ -43,7 +47,9 @@ This changelog chronologically records all development milestones, features, and
 ---
 
 ## [Milestone 2 - Hour 3-4] - Multi-Factor Smart Matching Engine & Double-Booking Prevention
+
 ### Added
+
 - **Multi-Factor Provider Ranking Algorithm (`services/matcher.py`)**:
   $$\text{Base Score} = (\text{Rating} \times 25) - (\text{Distance} \times 6) - (\text{Price} \times 0.015)$$
 - **Emergency Priority Weighting**:
@@ -64,7 +70,9 @@ This changelog chronologically records all development milestones, features, and
 ---
 
 ## [Milestone 1 - Hour 1-2] - Modular Project Scaffold & Provider Mock Database
+
 ### Added
+
 - **Modular Project Structure**:
   - `services/mock_db.py`: In-memory state manager, thread-safe provider catalogs, and booking repository.
   - `services/matcher.py`: Pure-Python algorithmic scoring engine.

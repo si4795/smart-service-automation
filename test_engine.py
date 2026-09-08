@@ -9,8 +9,9 @@ from services.matcher import calculate_match_score, rank_providers, auto_assign_
 
 class TestSmartServiceAutomation(unittest.TestCase):
     def setUp(self):
+        # Configure testing mode on Flask application instance directly
+        app.testing = True
         self.app = app.test_client()
-        self.app.testing = True
         db.reset()
 
     def test_score_calculation_normal(self):
@@ -74,6 +75,7 @@ class TestSmartServiceAutomation(unittest.TestCase):
         cat_providers = db.get_providers("Plumbing")
         best = auto_assign_emergency(cat_providers, "Plumbing", "2026-09-08 14:00")
         self.assertIsNotNone(best)
+        assert best is not None
         self.assertIn("score", best)
 
     def test_state_machine_and_invoicing(self):
@@ -88,7 +90,9 @@ class TestSmartServiceAutomation(unittest.TestCase):
             "client_address": "BAUST Campus, Saidpur"
         }, headers={"X-Requested-With": "XMLHttpRequest"})
         self.assertEqual(resp.status_code, 200)
-        b_id = resp.get_json()["booking"]["id"]
+        json_data = resp.get_json()
+        assert json_data is not None
+        b_id = json_data["booking"]["id"]
 
         # Attempt invalid jump: Requested -> In Progress (must fail 400)
         bad_resp = self.app.post(f"/update-status/{b_id}/In%20Progress", headers={"X-Requested-With": "XMLHttpRequest"})
@@ -98,12 +102,17 @@ class TestSmartServiceAutomation(unittest.TestCase):
         for next_step in ["Accepted", "On the Way", "In Progress", "Completed"]:
             r = self.app.post(f"/update-status/{b_id}/{next_step}", headers={"X-Requested-With": "XMLHttpRequest"})
             self.assertEqual(r.status_code, 200)
-            self.assertEqual(r.get_json()["booking"]["status"], next_step)
+            step_data = r.get_json()
+            assert step_data is not None
+            self.assertEqual(step_data["booking"]["status"], next_step)
 
         # Inspect invoice
-        completed_booking = r.get_json()["booking"]
+        completed_data = r.get_json()
+        assert completed_data is not None
+        completed_booking = completed_data["booking"]
         inv = completed_booking["invoice"]
         self.assertIsNotNone(inv)
+        assert inv is not None
         self.assertGreater(inv["emergency_fee"], 0) # Emergency fee added
         self.assertGreater(inv["grand_total"], inv["base_price"])
 
