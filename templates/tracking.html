@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Live Pipeline & Tax Invoice{% endblock %}
+{% block title %}SmartServe | Track Your Service Request{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
@@ -9,7 +9,7 @@
     <!-- Ticket Switcher Bar -->
     <div class="bg-white border border-zinc-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
         <div class="flex items-center gap-3 w-full sm:w-auto">
-            <label class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Active Ticket:</label>
+            <label class="text-xs font-semibold uppercase tracking-wider text-zinc-500">Active Order:</label>
             <select onchange="switchActiveBooking(this.value)" class="bg-zinc-50 border border-zinc-300 rounded-lg px-3 py-2 text-xs text-zinc-900 font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-full sm:w-88 transition">
                 {% for b in bookings %}
                 <option value="{{ b.id }}" {% if active_booking and b.id == active_booking.id %}selected{% endif %}>
@@ -18,9 +18,9 @@
                 {% endfor %}
             </select>
         </div>
-        <div class="text-xs text-zinc-500 flex items-center gap-2 font-mono">
+        <div class="text-xs text-zinc-500 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Lifecycle State Machine Verified
+            <span class="font-medium text-zinc-700">Real-Time Tracking Active</span>
         </div>
     </div>
 
@@ -34,30 +34,30 @@
                 <div class="flex items-center gap-2">
                     <span class="font-mono text-xs text-indigo-600 font-bold">{{ active_booking.id }}</span>
                     {% if active_booking.urgency == 'Emergency' %}
-                    <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold uppercase tracking-wide">Emergency Priority</span>
+                    <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold uppercase tracking-wide">🚨 Urgent Request</span>
                     {% else %}
-                    <span class="px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-700 text-[10px] font-medium">Standard Dispatch</span>
+                    <span class="px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-700 text-[10px] font-medium">Standard Scheduled</span>
                     {% endif %}
                 </div>
-                <h2 class="text-xl sm:text-2xl font-bold text-zinc-900 mt-1">{{ active_booking.category }} Service Pipeline</h2>
+                <h2 class="text-xl sm:text-2xl font-bold text-zinc-900 mt-1">{{ active_booking.category }} Service Order</h2>
                 <p class="text-xs text-zinc-500 mt-0.5">
-                    Assigned: <strong class="text-zinc-800">{{ active_booking.provider_name }}</strong> 
+                    Assigned Specialist: <strong class="text-zinc-800">{{ active_booking.provider_name }}</strong> 
                     (<span class="font-mono text-zinc-600">{{ active_booking.provider_phone }}</span>) • Appointment Slot: <strong class="text-zinc-800 font-mono">{{ active_booking.slot }}</strong>
                 </p>
             </div>
             <div class="sm:text-right">
-                <span class="text-[11px] text-zinc-400 block font-medium uppercase tracking-wider">Current Milestone</span>
+                <span class="text-[11px] text-zinc-400 block font-medium uppercase tracking-wider">Current Status</span>
                 <span class="text-base sm:text-lg font-bold text-indigo-600 uppercase font-mono">{{ active_booking.status }}</span>
             </div>
         </div>
 
         <!-- 5-Stage Stepper Progress Line -->
         {% set stages = [
-            ("Requested", "1", "Booking Confirmed"),
+            ("Requested", "1", "Request Received"),
             ("Accepted", "2", "Technician Assigned"),
-            ("On the Way", "3", "En Route to Site"),
-            ("In Progress", "4", "Work Execution"),
-            ("Completed", "5", "Verified & Invoiced")
+            ("On the Way", "3", "On the Way"),
+            ("In Progress", "4", "Service Ongoing"),
+            ("Completed", "5", "Completed & Invoiced")
         ] %}
 
         {% set current_idx = 0 %}
@@ -80,23 +80,22 @@
             <div class="hidden sm:block absolute top-5 left-6 h-0.5 bg-indigo-600 z-0 transition-all duration-300 {{ progress_width }}"></div>
 
             <div class="grid grid-cols-5 gap-2 relative z-10">
-                {% for st_name, st_num, st_desc in stages %}
+                {% for st_backend, st_num, st_label in stages %}
                 {% set is_past_or_current = loop.index0 <= current_idx %}
                 {% set is_active = loop.index0 == current_idx %}
                 <div class="flex flex-col items-center text-center">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs {% if is_active %}bg-indigo-600 text-white ring-4 ring-indigo-50 font-bold{% elif is_past_or_current %}bg-indigo-600 text-white{% else %}bg-zinc-100 text-zinc-400 border border-zinc-200{% endif %}">
                         {% if is_past_or_current and not is_active %}✓{% else %}{{ st_num }}{% endif %}
                     </div>
-                    <span class="text-xs font-semibold mt-2 {% if is_past_or_current %}text-zinc-900{% else %}text-zinc-400{% endif %}">{{ st_name }}</span>
-                    <span class="hidden md:block text-[11px] text-zinc-500 mt-0.5">{{ st_desc }}</span>
+                    <span class="text-xs font-semibold mt-2 {% if is_past_or_current %}text-zinc-900{% else %}text-zinc-400{% endif %}">{{ st_label }}</span>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Audit Event History Timeline -->
+        <!-- Activity Updates (Timeline) -->
         <div class="pt-4 border-t border-zinc-100">
-            <h4 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Audit Event History Timeline</h4>
+            <h4 class="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Activity Updates</h4>
             <div class="space-y-2 font-mono text-xs">
                 {% for h in active_booking.history %}
                 <div class="flex items-center justify-between p-3 rounded-lg bg-zinc-50 border border-zinc-200/70">
@@ -113,7 +112,7 @@
 
     </div>
 
-    <!-- Automated Digital Tax Invoice (Stripe / Linear Minimal Style) -->
+    <!-- Automated Digital Receipt & Tax Invoice (Linear / Stripe Minimal Style) -->
     {% if active_booking.invoice %}
     <div id="invoice-printable" class="bg-white border border-zinc-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
         
@@ -121,7 +120,7 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-zinc-100 pb-5 gap-3">
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="text-lg font-bold text-zinc-900">AeroServe Platform</span>
+                    <span class="text-lg font-bold text-zinc-900">SmartServe Platform</span>
                     <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold uppercase">Official Tax Invoice</span>
                 </div>
                 <p class="text-xs text-zinc-500 mt-0.5">Automated Electronic Billing & Fulfillment System</p>
@@ -166,7 +165,7 @@
                     </tr>
                     {% if active_booking.invoice.emergency_fee > 0 %}
                     <tr>
-                        <td class="py-3 text-rose-600 font-medium">Priority Emergency Response Surcharge</td>
+                        <td class="py-3 text-rose-600 font-medium">Priority Urgent Response Surcharge</td>
                         <td class="py-3 text-right text-zinc-500 font-mono">1</td>
                         <td class="py-3 text-right text-rose-600 font-mono">৳{{ "%.2f"|format(active_booking.invoice.emergency_fee) }}</td>
                     </tr>
@@ -200,13 +199,13 @@
         <!-- Print Action Bar -->
         <div class="flex items-center justify-between pt-4 border-t border-zinc-100">
             <div class="text-[11px] text-zinc-400">
-                Digitally sealed and generated upon 5-stage lifecycle completion.
+                Official digital receipt issued upon verified service completion.
             </div>
             <button onclick="window.print()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white transition flex items-center gap-1.5 shadow-xs">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                 </svg>
-                Print Tax Invoice
+                Print Receipt
             </button>
         </div>
 
@@ -215,7 +214,7 @@
     <!-- Pending Invoice State -->
     <div class="bg-white border border-dashed border-zinc-300 rounded-2xl p-8 text-center text-xs text-zinc-500 space-y-1">
         <p class="font-semibold text-zinc-800">Electronic Tax Invoice Pending</p>
-        <p>The itemized invoice will unlock automatically as soon as the technician completes the final stage in the Dispatch Kanban.</p>
+        <p>Your itemized digital invoice will unlock automatically as soon as the technician completes the service.</p>
     </div>
     {% endif %}
 
@@ -224,8 +223,13 @@
     {% else %}
     <!-- Empty State -->
     <div class="bg-white border border-zinc-200 rounded-2xl p-12 text-center space-y-3">
-        <p class="text-zinc-800 font-bold text-base">No active appointments found.</p>
-        <p class="text-xs text-zinc-500">Book an appointment in the Service Matcher or seed the pipeline with sample data to observe the workflow.</p>
+        <div class="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-400 flex items-center justify-center mx-auto">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+        </div>
+        <p class="text-zinc-800 font-bold text-base">No active service appointments found.</p>
+        <p class="text-xs text-zinc-500 max-w-sm mx-auto">Book an appointment or seed sample records using the sandbox at the bottom of the page to observe live tracking.</p>
         <div class="pt-2">
             <a href="{{ url_for('index') }}" class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs">
                 Schedule a Service →

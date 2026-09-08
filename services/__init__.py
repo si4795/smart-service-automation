@@ -1,5 +1,3 @@
 """
-Services package for Smart Home Service Automation
-BAUST CSE FEST 2026 Hackathon
+Services package for SmartServe on-demand home service platform.
 """
-
