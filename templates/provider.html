@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Technician Dispatch Operations Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Operations Deck -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-bold text-white">Technician Kanban Dispatch Board</h1>
+                <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-semibold">Live Operational Board</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Manage incoming service tickets, track technician field progression, and advance status through mandatory sequence.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-mono text-slate-300">
+                Total Jobs: <span class="text-emerald-400 font-bold">{{ total_bookings }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Grid (5 Workflow Stages) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {% for st in status_flow %}
+        {% set stage_jobs = kanban[st] %}
+        <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between min-h-[500px]">
+            <div>
+                <!-- Column Header -->
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                    <div class="flex items-center gap-2">
+                        {% if st == 'Requested' %}
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        {% elif st == 'Accepted' %}
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                        {% elif st == 'On the Way' %}
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                        {% elif st == 'In Progress' %}
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                        {% elif st == 'Completed' %}
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        {% endif %}
+                        <span class="text-xs font-bold text-slate-200 uppercase tracking-wider">{{ st }}</span>
+                    </div>
+                    <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-950 text-slate-400 border border-slate-800">{{ stage_jobs|length }}</span>
+                </div>
+
+                <!-- Job Cards in this Stage -->
+                <div class="space-y-3">
+                    {% for b in stage_jobs %}
+                    <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-3.5 space-y-2.5 hover:border-slate-700 transition shadow-md">
+                        <!-- ID & Urgency -->
+                        <div class="flex items-center justify-between">
+                            <span class="font-mono text-[11px] font-bold text-slate-400">{{ b.id }}</span>
+                            {% if b.urgency == 'Emergency' %}
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse">Emergency</span>
+                            {% else %}
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-800 text-slate-400">Standard</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Category & Provider -->
+                        <div>
+                            <div class="text-xs font-bold text-white leading-tight">{{ b.category }}</div>
+                            <div class="text-[11px] text-emerald-400 font-medium mt-0.5">Tech: {{ b.provider_name }}</div>
+                        </div>
+
+                        <!-- Client Info -->
+                        <div class="text-[11px] text-slate-400 space-y-0.5 border-t border-slate-900 pt-2">
+                            <div class="text-slate-300 font-semibold truncate">{{ b.client_name }}</div>
+                            <div class="font-mono text-slate-400">{{ b.client_phone }}</div>
+                            <div class="truncate text-slate-500 text-[10px]">{{ b.client_address }}</div>
+                            <div class="text-[10px] text-slate-400">Slot: <span class="text-slate-300">{{ b.slot }}</span></div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="pt-2 border-t border-slate-900 flex flex-col gap-1.5">
+                            {% if st == 'Requested' %}
+                            <button onclick="advanceStage('{{ b.id }}', 'Accepted')" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white transition flex items-center justify-center gap-1 shadow-md shadow-blue-600/20">
+                                Accept Ticket →
+                            </button>
+                            {% elif st == 'Accepted' %}
+                            <button onclick="advanceStage('{{ b.id }}', 'On the Way')" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition flex items-center justify-center gap-1 shadow-md shadow-purple-600/20">
+                                Dispatch Tech →
+                            </button>
+                            {% elif st == 'On the Way' %}
+                            <button onclick="advanceStage('{{ b.id }}', 'In Progress')" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center justify-center gap-1 shadow-md shadow-cyan-600/20">
+                                Start Work →
+                            </button>
+                            {% elif st == 'In Progress' %}
+                            <button onclick="advanceStage('{{ b.id }}', 'Completed')" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20">
+                                Mark Completed & Bill ✓
+                            </button>
+                            {% elif st == 'Completed' %}
+                            <a href="{{ url_for('tracking') }}?active_id={{ b.id }}" class="w-full py-1.5 px-2 rounded-lg text-[11px] font-bold text-center bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 transition block">
+                                View Invoice & Receipt →
+                            </a>
+                            {% endif %}
+
+                            <a href="{{ url_for('tracking') }}?active_id={{ b.id }}" class="text-[10px] text-center text-slate-500 hover:text-slate-300 py-0.5 transition">
+                                View Timeline Details
+                            </a>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+
+                    {% if not stage_jobs %}
+                    <div class="text-center py-10 text-slate-600 text-xs border border-dashed border-slate-800/80 rounded-xl">
+                        No jobs in {{ st }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Footer note for stage -->
+            <div class="mt-4 pt-2 border-t border-slate-800/50 text-[10px] text-slate-500 text-center">
+                Stage {{ loop.index }} of 5
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function advanceStage(bookingId, newStatus) {
+        try {
+            const res = await fetch(`/update-status/${bookingId}/${encodeURIComponent(newStatus)}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                alert(data.error || "Transition failed.");
+                return;
+            }
+            showToast(`Ticket ${bookingId} transitioned to [${newStatus}]!`);
+            setTimeout(() => {
+                window.location.reload();
+            }, 600);
+        } catch (err) {
+            alert("Error transitioning ticket stage.");
+        }
+    }
+</script>
+{% endblock %}

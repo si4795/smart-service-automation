@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Live Tracking & Automated Digital Invoice{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    {% if bookings %}
+    <!-- Active Ticket Selector Bar -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Booking:</label>
+            <select onchange="window.location.href='{{ url_for('tracking') }}?active_id=' + this.value" class="bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-80">
+                {% for b in bookings %}
+                <option value="{{ b.id }}" {% if active_booking and b.id == active_booking.id %}selected{% endif %}>
+                    {{ b.id }} — {{ b.category }} ({{ b.client_name }}) [{{ b.status }}]
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="text-xs text-slate-400 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            Real-Time Stage State Machine
+        </div>
+    </div>
+
+    {% if active_booking %}
+    <!-- Visual 5-Stage Step Progress Tracker -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        
+        <!-- Header Info -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-3">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-xs text-emerald-400 font-bold">{{ active_booking.id }}</span>
+                    {% if active_booking.urgency == 'Emergency' %}
+                    <span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-black uppercase tracking-wider animate-pulse">Emergency Priority</span>
+                    {% else %}
+                    <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-semibold">Standard Scheduled</span>
+                    {% endif %}
+                </div>
+                <h2 class="text-2xl font-bold text-white mt-1">{{ active_booking.category }} Service Pipeline</h2>
+                <p class="text-xs text-slate-400 mt-0.5">
+                    Assigned Technician: <strong class="text-slate-200">{{ active_booking.provider_name }}</strong> 
+                    (<span class="font-mono text-emerald-400">{{ active_booking.provider_phone }}</span>) • Slot: <strong class="text-slate-200">{{ active_booking.slot }}</strong>
+                </p>
+            </div>
+            <div class="text-right">
+                <span class="text-xs text-slate-500 block">Current Status</span>
+                <span class="text-lg font-black text-emerald-400 uppercase tracking-tight">{{ active_booking.status }}</span>
+            </div>
+        </div>
+
+        <!-- 5-Stage Progress Bar -->
+        {% set stages = [
+            ("Requested", "1", "Booking Placed"),
+            ("Accepted", "2", "Technician Assigned"),
+            ("On the Way", "3", "In Transit to Site"),
+            ("In Progress", "4", "Service Execution"),
+            ("Completed", "5", "Verified & Invoiced")
+        ] %}
+
+        {% set current_idx = 0 %}
+        {% if active_booking.status == 'Requested' %}{% set current_idx = 0 %}
+        {% elif active_booking.status == 'Accepted' %}{% set current_idx = 1 %}
+        {% elif active_booking.status == 'On the Way' %}{% set current_idx = 2 %}
+        {% elif active_booking.status == 'In Progress' %}{% set current_idx = 3 %}
+        {% elif active_booking.status == 'Completed' %}{% set current_idx = 4 %}
+        {% endif %}
+
+        <div class="relative py-4">
+            <div class="hidden sm:block absolute top-1/2 left-0 right-0 h-1 bg-slate-800 -translate-y-1/2 z-0"></div>
+            <div class="hidden sm:block absolute top-1/2 left-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 -translate-y-1/2 z-0 transition-all duration-500" style="width: {{ (current_idx / 4) * 100 }}%;"></div>
+
+            <div class="grid grid-cols-5 gap-2 relative z-10">
+                {% for st_name, st_num, st_desc in stages %}
+                {% set is_past_or_current = loop.index0 <= current_idx %}
+                {% set is_active = loop.index0 == current_idx %}
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-md {% if is_active %}bg-emerald-500 text-slate-950 ring-4 ring-emerald-500/30 font-black scale-110{% elif is_past_or_current %}bg-emerald-600 text-white{% else %}bg-slate-800 text-slate-500 border border-slate-700{% endif %}">
+                        {% if is_past_or_current and not is_active %}✓{% else %}{{ st_num }}{% endif %}
+                    </div>
+                    <span class="text-xs font-bold mt-2 {% if is_past_or_current %}text-slate-100{% else %}text-slate-500{% endif %}">{{ st_name }}</span>
+                    <span class="hidden md:block text-[10px] text-slate-400 mt-0.5">{{ st_desc }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Audit Event History Timeline -->
+        <div class="pt-4 border-t border-slate-800">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Audit Event History Timeline</h4>
+            <div class="space-y-2 font-mono text-xs">
+                {% for h in active_booking.history %}
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span class="font-bold text-slate-200">[{{ h.status }}]</span>
+                        <span class="text-slate-400">{{ h.note }}</span>
+                    </div>
+                    <span class="text-[11px] text-slate-500">{{ h.timestamp }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Automated Digital Invoice & Receipt -->
+    {% if active_booking.invoice %}
+    <div id="invoice-printable" class="bg-slate-900 border border-emerald-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden space-y-5">
+        <div class="absolute -right-8 -top-8 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-4 gap-3">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xl font-black text-white">SmartServe Automation</span>
+                    <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">OFFICIAL TAX INVOICE</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">BAUST CSE FEST 2026 Automated Billing Engine</p>
+            </div>
+            <div class="text-right">
+                <div class="font-mono text-base font-black text-emerald-400">{{ active_booking.invoice.invoice_no }}</div>
+                <div class="text-xs text-slate-400 font-mono">{{ active_booking.invoice.issue_date }}</div>
+            </div>
+        </div>
+
+        <!-- Client & Technician Columns -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border-b border-slate-800 pb-4">
+            <div>
+                <span class="text-slate-500 uppercase text-[10px] font-bold block mb-1">Customer / Billed To:</span>
+                <div class="font-bold text-white text-sm">{{ active_booking.invoice.client_name }}</div>
+                <div class="text-slate-300 font-mono">{{ active_booking.invoice.client_phone }}</div>
+                <div class="text-slate-400">{{ active_booking.invoice.client_address }}</div>
+            </div>
+            <div>
+                <span class="text-slate-500 uppercase text-[10px] font-bold block mb-1">Fulfillment Details:</span>
+                <div class="font-bold text-white text-sm">{{ active_booking.invoice.provider_name }}</div>
+                <div class="text-slate-300">{{ active_booking.invoice.category }}</div>
+                <div class="text-slate-400">Appointment: {{ active_booking.invoice.slot }} (Priority: {{ active_booking.invoice.urgency }})</div>
+            </div>
+        </div>
+
+        <!-- Line Item Table -->
+        <div>
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="text-slate-400 border-b border-slate-800 text-[11px] uppercase text-left">
+                        <th class="py-2.5">Item Description</th>
+                        <th class="py-2.5 text-right">Units</th>
+                        <th class="py-2.5 text-right">Rate (BDT)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    <tr>
+                        <td class="py-2.5 text-slate-200 font-medium">Standard Service Fee ({{ active_booking.category }})</td>
+                        <td class="py-2.5 text-right text-slate-400 font-mono">1 Service</td>
+                        <td class="py-2.5 text-right text-slate-200 font-mono">৳{{ "%.2f"|format(active_booking.invoice.base_price) }}</td>
+                    </tr>
+                    {% if active_booking.invoice.emergency_fee > 0 %}
+                    <tr>
+                        <td class="py-2.5 text-red-400 font-medium">🚨 24/7 Priority Emergency Surcharge</td>
+                        <td class="py-2.5 text-right text-slate-400 font-mono">1 Surcharge</td>
+                        <td class="py-2.5 text-right text-red-400 font-mono">৳{{ "%.2f"|format(active_booking.invoice.emergency_fee) }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td class="py-2.5 text-slate-400">Platform Convenience & Safety Insurance</td>
+                        <td class="py-2.5 text-right text-slate-400 font-mono">Fixed</td>
+                        <td class="py-2.5 text-right text-slate-400 font-mono">৳{{ "%.2f"|format(active_booking.invoice.platform_fee) }}</td>
+                    </tr>
+                    <tr class="font-semibold text-slate-300">
+                        <td class="py-2.5">Subtotal</td>
+                        <td class="py-2.5 text-right font-mono"></td>
+                        <td class="py-2.5 text-right font-mono">৳{{ "%.2f"|format(active_booking.invoice.subtotal) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="py-2.5 text-slate-400">Government VAT (5%)</td>
+                        <td class="py-2.5 text-right text-slate-400 font-mono">5%</td>
+                        <td class="py-2.5 text-right text-slate-400 font-mono">৳{{ "%.2f"|format(active_booking.invoice.vat) }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="border-t-2 border-slate-700 text-sm font-bold text-white">
+                        <td class="pt-3">Total Amount Paid / Due</td>
+                        <td class="pt-3"></td>
+                        <td class="pt-3 text-right text-emerald-400 font-mono text-base">৳{{ "%.2f"|format(active_booking.invoice.grand_total) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Print Bar -->
+        <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+            <div class="text-[11px] text-slate-500">
+                Digitally authenticated and sealed upon 5-stage workflow completion.
+            </div>
+            <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 shadow">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Print Official Invoice
+            </button>
+        </div>
+
+    </div>
+    {% else %}
+    <!-- Pending Invoice Notification -->
+    <div class="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-6 text-center text-xs text-slate-400 space-y-1">
+        <p class="font-bold text-slate-300">Digital Tax Invoice Pending</p>
+        <p>The automated itemized invoice will unlock as soon as the technician marks this job as <strong>"Completed"</strong> in the Provider Dashboard.</p>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center space-y-3">
+        <p class="text-slate-300 font-bold text-base">No active service bookings found.</p>
+        <p class="text-xs text-slate-400">Head over to Tab 1 to book a technician or click "⚡ Pre-seed 5 Stages Demo" above to explore the tracking workflow.</p>
+        <div class="pt-2">
+            <a href="{{ url_for('index') }}" class="inline-flex items-center px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition">
+                Book a Service Now →
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
