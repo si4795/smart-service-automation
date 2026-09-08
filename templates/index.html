@@ -269,19 +269,53 @@
                 </div>
             </div>
 
+            <!-- Auth Status inside Modal -->
+            {% if current_user %}
+            <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full {% if current_user.role == 'technician' %}bg-purple-600{% else %}bg-emerald-600{% endif %} text-white font-bold text-[10px] flex items-center justify-center">
+                        {{ current_user.avatar }}
+                    </span>
+                    <div>
+                        <span class="font-bold text-zinc-900 text-xs">{{ current_user.name }}</span>
+                        <span class="text-[10px] text-zinc-500 block">{{ current_user.email }}</span>
+                    </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase">
+                    {{ current_user.role|capitalize }}
+                </span>
+            </div>
+            {% else %}
+            <div id="modal-auth-prompt" class="p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 space-y-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <span>Sign in required to confirm booking</span>
+                    </div>
+                    <a href="{{ url_for('login') }}" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold underline">Sign In</a>
+                </div>
+                <p class="text-[11px] text-amber-800/80">Use 1-click customer login to fill your details instantly:</p>
+                <button type="button" onclick="modalQuickLogin('customer')" id="btn-modal-quick-login" class="w-full py-2 px-3 rounded-lg bg-amber-200/90 hover:bg-amber-300 text-amber-950 font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow-2xs">
+                    <span>⚡ 1-Click Sign In as Suaib (Customer)</span>
+                </button>
+            </div>
+            {% endif %}
+
             <div>
                 <label class="block font-medium text-zinc-700 mb-1">Your Full Name</label>
-                <input type="text" name="client_name" required value="Suaib Ahmed" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                <input type="text" id="modal-client-name" name="client_name" required value="{{ current_user.name if current_user else 'Suaib Islam' }}" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
             </div>
 
             <div>
                 <label class="block font-medium text-zinc-700 mb-1">Contact Phone Number</label>
-                <input type="text" name="client_phone" required value="+880 1711-223344" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 text-xs font-mono focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                <input type="text" id="modal-client-phone" name="client_phone" required value="{{ current_user.phone if current_user else '+880 1711-223344' }}" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 text-xs font-mono focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
             </div>
 
             <div>
                 <label class="block font-medium text-zinc-700 mb-1">Service Address / Location</label>
-                <input type="text" name="client_address" required value="Quarter 12/B, Cantonment Housing, Saidpur" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                <input type="text" id="modal-client-address" name="client_address" required value="{{ current_user.address if current_user else 'Quarter 12/B, Cantonment Housing, Saidpur' }}" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-zinc-900 text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
             </div>
 
             <div>
@@ -316,6 +350,45 @@
 
     function closeBookingModal() {
         document.getElementById('booking-modal').classList.add('hidden');
+    }
+
+    async function modalQuickLogin(role) {
+        const btn = document.getElementById('btn-modal-quick-login');
+        if (btn) btn.innerText = "Signing in...";
+        try {
+            const formData = new FormData();
+            formData.append('role', role);
+            const res = await fetch('/api/quick-login', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            if (data.success && data.user) {
+                document.getElementById('modal-client-name').value = data.user.name;
+                document.getElementById('modal-client-phone').value = data.user.phone || '+880 1711-223344';
+                document.getElementById('modal-client-address').value = data.user.address || 'Quarter 12/B, Cantonment Housing, Saidpur';
+                showToast("Signed in as " + data.user.name + " (" + data.user.role + ")");
+                
+                const authPrompt = document.getElementById('modal-auth-prompt');
+                if (authPrompt) {
+                    authPrompt.className = "p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between";
+                    authPrompt.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center">${data.user.avatar}</span>
+                            <div>
+                                <span class="font-bold text-zinc-900 text-xs">${data.user.name}</span>
+                                <span class="text-[10px] text-zinc-500 block">${data.user.email}</span>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase">${data.user.role}</span>
+                    `;
+                }
+            }
+        } catch (e) {
+            alert("Quick sign-in failed.");
+            if (btn) btn.innerText = "⚡ 1-Click Sign In as Suaib (Customer)";
+        }
     }
 
     async function submitBooking(e) {

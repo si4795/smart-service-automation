@@ -108,5 +108,76 @@ class TestSmartServiceAutomation(unittest.TestCase):
         self.assertGreater(inv["emergency_fee"], 0)
         self.assertGreater(inv["grand_total"], inv["base_price"])
 
+    def test_user_authentication_success(self):
+        """Validates 1-click and standard credential logins for Customer & Technician personas."""
+        # 1-Click Customer
+        resp_cust = self.app.post("/login", data={"demo_role": "customer"})
+        self.assertEqual(resp_cust.status_code, 302)
+
+        # 1-Click Technician
+        resp_tech = self.app.post("/login", data={"demo_role": "technician"})
+        self.assertEqual(resp_tech.status_code, 302)
+
+        # Direct Credential Check
+        cust_user = db.authenticate_user("customer@smartserve.local", "pass123")
+        self.assertIsNotNone(cust_user)
+        assert cust_user is not None
+        self.assertEqual(cust_user["role"], "customer")
+
+        tech_user = db.authenticate_user("tech@smartserve.local", "pass123")
+        self.assertIsNotNone(tech_user)
+        assert tech_user is not None
+        self.assertEqual(tech_user["role"], "technician")
+
+    def test_user_authentication_invalid(self):
+        """Ensures invalid credentials are rejected with proper status."""
+        resp = self.app.post("/login", data={
+            "email": "wrong@example.com",
+            "password": "badpassword"
+        }, headers={"X-Requested-With": "XMLHttpRequest"})
+        self.assertEqual(resp.status_code, 401)
+
+    def test_technician_route_guard_unauthorized(self):
+        """Verifies unauthenticated users and customers cannot access /provider."""
+        # Unauthenticated request redirects to /login
+        unauth_resp = self.app.get("/provider")
+        self.assertEqual(unauth_resp.status_code, 302)
+        self.assertIn("/login", unauth_resp.location)
+
+        # Logged in as Customer attempting to access /provider
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-cust-01"
+            sess["user_role"] = "customer"
+
+        cust_resp = self.app.get("/provider")
+        self.assertEqual(cust_resp.status_code, 302)
+        self.assertIn("/login", cust_resp.location)
+
+    def test_technician_route_guard_authorized(self):
+        """Verifies technician role grants access to /provider operations board."""
+        with self.app.session_transaction() as sess:
+            sess["user_id"] = "usr-tech-01"
+            sess["user_role"] = "technician"
+
+        tech_resp = self.app.get("/provider")
+        self.assertEqual(tech_resp.status_code, 200)
+
+    def test_user_registration(self):
+        """Verifies new customer registration creates session and persists user."""
+        resp = self.app.post("/signup", data={
+            "name": "Mahmudur Rahman",
+            "email": "mahmud@example.com",
+            "password": "securepass123",
+            "role": "customer",
+            "phone": "+880 1711-998877",
+            "address": "Saidpur Cantonment"
+        })
+        self.assertEqual(resp.status_code, 302)
+        created = db.get_user_by_email("mahmud@example.com")
+        self.assertIsNotNone(created)
+        assert created is not None
+        self.assertEqual(created["name"], "Mahmudur Rahman")
+
 if __name__ == "__main__":
     unittest.main()
+

@@ -328,10 +328,35 @@ INITIAL_PROVIDERS: List[Dict[str, Any]] = [
     }
 ]
 
+INITIAL_USERS: List[Dict[str, Any]] = [
+    {
+        "id": "usr-cust-01",
+        "email": "customer@smartserve.local",
+        "password": "pass123",
+        "name": "Suaib Islam",
+        "role": "customer",
+        "phone": "+880 1711-223344",
+        "address": "Quarter 12/B, Cantonment Housing, Saidpur",
+        "avatar": "SI"
+    },
+    {
+        "id": "usr-tech-01",
+        "email": "tech@smartserve.local",
+        "password": "pass123",
+        "name": "Kazi Rashedul Karim",
+        "role": "technician",
+        "phone": "+880 1914-112233",
+        "address": "Railgate Commercial Hub, Saidpur",
+        "provider_id": "prov-elec-03",
+        "avatar": "KR"
+    }
+]
+
 class MockDB:
     def __init__(self) -> None:
         self.providers: List[Dict[str, Any]] = []
         self.bookings: List[Dict[str, Any]] = []
+        self.users: List[Dict[str, Any]] = []
         self.reset()
 
     def reset(self) -> None:
@@ -342,6 +367,60 @@ class MockDB:
             cp["busy_slots"] = list(p["busy_slots"])
             self.providers.append(cp)
         self.bookings = []
+        self.users = []
+        for u in INITIAL_USERS:
+            self.users.append(dict(u))
+
+    def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
+        return next((u for u in self.users if u["id"] == user_id), None)
+
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        clean_email = email.strip().lower()
+        return next((u for u in self.users if u["email"].lower() == clean_email), None)
+
+    def authenticate_user(self, email: str, password: str) -> Optional[Dict[str, Any]]:
+        user = self.get_user_by_email(email)
+        if user and user.get("password") == password:
+            return user
+        return None
+
+    def create_user(
+        self,
+        email: str,
+        password: str,
+        name: str,
+        role: str = "customer",
+        phone: str = "",
+        address: str = ""
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+        clean_email = email.strip().lower()
+        if not clean_email or "@" not in clean_email:
+            return None, "A valid email address is required."
+        if not password or len(password) < 4:
+            return None, "Password must be at least 4 characters."
+        if not name.strip():
+            return None, "Name is required."
+        if role not in ("customer", "technician"):
+            role = "customer"
+
+        if self.get_user_by_email(clean_email):
+            return None, f"An account with email '{clean_email}' already exists."
+
+        parts = name.strip().split()
+        initials = "".join([p[0].upper() for p in parts[:2]]) if parts else "U"
+
+        new_user: Dict[str, Any] = {
+            "id": f"usr-{uuid.uuid4().hex[:6]}",
+            "email": clean_email,
+            "password": password,
+            "name": name.strip(),
+            "role": role,
+            "phone": phone.strip() or "+880 1700-000000",
+            "address": address.strip() or "Saidpur Cantonment Area",
+            "avatar": initials
+        }
+        self.users.append(new_user)
+        return new_user, None
 
     def get_providers(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
         if category:
