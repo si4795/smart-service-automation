@@ -1,18 +1,17 @@
 """
-Smart Home Service Automation - Application Entry Point & Flask Router
-BAUST CSE FEST 2026 Competitive Hackathon
+Application routing and HTTP handlers for Smart Home Service Automation platform.
 """
-import os
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from typing import Any, Dict
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from services.mock_db import db, CATEGORIES, STATUS_FLOW
-from services.matcher import rank_providers, calculate_match_score, auto_assign_emergency
+from services.matcher import rank_providers, auto_assign_emergency
 
 app = Flask(__name__)
-app.secret_key = "baust-cse-fest-2026-smart-home-service-key"
+app.secret_key = "smart-service-automation-key-2026"
 
 @app.route("/", methods=["GET"])
 def index():
-    """Customer Booking & Smart Recommendation Portal (Tab 1)."""
+    """Customer booking portal with dynamic recommendation rankings."""
     selected_category = request.args.get("category", CATEGORIES[0])
     selected_date = request.args.get("date", "2026-09-08")
     selected_time = request.args.get("time", "11:00")
@@ -44,7 +43,7 @@ def index():
 
 @app.route("/search", methods=["POST"])
 def search():
-    """Processes search filters and redirects to index with query parameters."""
+    """Handles search form submissions and redirects with filtered query parameters."""
     category = request.form.get("category", CATEGORIES[0])
     slot_date = request.form.get("slot_date", "2026-09-08")
     slot_time = request.form.get("slot_time", "11:00")
@@ -53,20 +52,17 @@ def search():
 
 @app.route("/book", methods=["POST"])
 def book():
-    """
-    Validates slot availability (Double-booking shield),
-    reserves technician slot, and creates a booking in 'Requested' state.
-    """
+    """Reserves appointment slot and registers initial booking in Requested status."""
     provider_id = request.form.get("provider_id")
     slot = request.form.get("slot")
     urgency = request.form.get("urgency", "Normal")
     client_name = request.form.get("client_name", "Valued Customer").strip()
     client_phone = request.form.get("client_phone", "+880 1700-000000").strip()
-    client_address = request.form.get("client_address", "Dhaka, Bangladesh").strip()
+    client_address = request.form.get("client_address", "Saidpur, Nilphamari").strip()
     notes = request.form.get("notes", "").strip()
 
     if not provider_id or not slot:
-        return jsonify({"success": False, "error": "Provider and Slot are mandatory."}), 400
+        return jsonify({"success": False, "error": "Provider ID and appointment slot are required."}), 400
 
     booking, err = db.create_booking(
         provider_id=provider_id,
@@ -89,18 +85,15 @@ def book():
 
 @app.route("/auto-assign-emergency", methods=["POST"])
 def auto_assign():
-    """
-    Special Feature: One-Click Emergency Auto-Assignment
-    Automatically selects and books the highest-ranked available technician for immediate dispatch.
-    """
+    """Automatically selects and dispatches the optimal technician for emergency requests."""
     category = request.form.get("category", CATEGORIES[0])
     slot_date = request.form.get("slot_date", "2026-09-08")
     slot_time = request.form.get("slot_time", "11:00")
     slot = f"{slot_date} {slot_time}".strip()
-    client_name = request.form.get("client_name", "Emergency Client").strip()
+    client_name = request.form.get("client_name", "Emergency Dispatch Client").strip()
     client_phone = request.form.get("client_phone", "+880 1799-998877").strip()
-    client_address = request.form.get("client_address", "Dhaka, Bangladesh").strip()
-    notes = request.form.get("notes", "🚨 CRITICAL EMERGENCY - IMMEDIATE ASSISTANCE NEEDED").strip()
+    client_address = request.form.get("client_address", "Saidpur Cantonment Area").strip()
+    notes = request.form.get("notes", "Priority Emergency Dispatch").strip()
 
     all_cat_providers = db.get_providers(category=category)
     best_candidate = auto_assign_emergency(all_cat_providers, category, slot)
@@ -108,7 +101,7 @@ def auto_assign():
     if best_candidate is None or not isinstance(best_candidate, dict):
         return jsonify({
             "success": False,
-            "error": f"No technicians currently available for {category} at {slot} due to existing bookings."
+            "error": f"No technicians currently available in '{category}' for slot {slot}."
         }), 409
 
     booking, err = db.create_booking(
@@ -122,7 +115,7 @@ def auto_assign():
     )
 
     if err or booking is None:
-        return jsonify({"success": False, "error": err or "Failed to create emergency reservation."}), 409
+        return jsonify({"success": False, "error": err or "Failed to reserve emergency booking."}), 409
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
         return jsonify({
@@ -136,9 +129,9 @@ def auto_assign():
 
 @app.route("/provider", methods=["GET"])
 def provider():
-    """Technician Kanban Operations Board (Tab 2)."""
+    """Operations Kanban dashboard organizing tickets across 5 sequential stages."""
     bookings = db.get_bookings()
-    kanban = {s: [] for s in STATUS_FLOW}
+    kanban: Dict[str, list] = {s: [] for s in STATUS_FLOW}
     for b in bookings:
         kanban.setdefault(b["status"], []).append(b)
 
@@ -153,7 +146,7 @@ def provider():
 
 @app.route("/tracking", methods=["GET"])
 def tracking():
-    """Customer Live Tracking & Digital Invoicing (Tab 3)."""
+    """Live ticket pipeline view with audit timeline and automated digital invoice."""
     bookings = db.get_bookings()
     active_id = request.args.get("active_id")
     active_booking = None
@@ -172,14 +165,11 @@ def tracking():
     )
 
 @app.route("/update-status/<booking_id>/<new_status>", methods=["POST", "GET"])
-def update_status(booking_id, new_status):
-    """
-    Advances state through the mandatory sequence:
-    [Requested] -> [Accepted] -> [On the Way] -> [In Progress] -> [Completed]
-    """
+def update_status(booking_id: str, new_status: str):
+    """Advances ticket lifecycle through: Requested -> Accepted -> On the Way -> In Progress -> Completed."""
     booking, err = db.update_status(booking_id, new_status)
     if err or booking is None:
-        return jsonify({"success": False, "error": err or "Booking not found."}), 400
+        return jsonify({"success": False, "error": err or "Appointment record not found."}), 400
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
         return jsonify({"success": True, "booking": booking})
@@ -191,13 +181,12 @@ def update_status(booking_id, new_status):
 
 @app.route("/api/summary", methods=["GET"])
 def api_summary():
-    """Returns complete real-time JSON metrics for validation and tests."""
+    """Returns service summary metrics and status distributions."""
     bookings = db.get_bookings()
     providers = db.get_providers()
     return jsonify({
         "status": "online",
-        "competition": "BAUST CSE FEST 2026",
-        "challenge": "Smart Home Service Automation",
+        "service": "Smart Home Service Automation",
         "total_providers": len(providers),
         "categories": CATEGORIES,
         "total_bookings": len(bookings),
@@ -209,15 +198,15 @@ def api_summary():
 
 @app.route("/api/seed-demo", methods=["POST", "GET"])
 def api_seed_demo():
-    """Fast-track judge demo: seeds realistic bookings across all 5 stages."""
+    """Pre-seeds operational data across all 5 workflow stages."""
     count = db.seed_demo_stages()
-    return jsonify({"success": True, "message": "Demo stages seeded successfully.", "total_bookings": count})
+    return jsonify({"success": True, "message": "Demo data populated.", "total_bookings": count})
 
 @app.route("/api/reset", methods=["POST"])
 def api_reset():
-    """Resets mock database to pristine baseline state."""
+    """Flushes in-memory booking storage and resets provider schedules."""
     db.reset()
-    return jsonify({"success": True, "message": "Database reset to defaults."})
+    return jsonify({"success": True, "message": "State reset to defaults."})
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)

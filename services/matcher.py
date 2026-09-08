@@ -1,19 +1,15 @@
 """
-Smart Provider Matching Engine
-BAUST CSE FEST 2026 Competitive Hackathon
-
-Multi-factor scoring algorithm with:
-- Double-booking prevention
-- Base formula: Score = (Rating * 25) - (Distance * 6) - (Price * 0.015)
-- Emergency routing boost: Score += (10 - Distance) * 20
-- Workload balancing tie-breaker: Prioritizes lower active_jobs_count
-- Dynamic comparison badges: "Top Rated", "Fastest Arrival", "Best Value"
+Multi-factor technician matching and ranking engine.
+Implements distance penalty, rating weighting, urgency multipliers, and workload balancing.
 """
+from typing import Any, Dict, List, Optional, Tuple
+from services.mock_db import CATEGORY_ALIASES
 
-def calculate_match_score(provider, urgency="Normal"):
+def calculate_match_score(provider: Dict[str, Any], urgency: str = "Normal") -> Tuple[float, float, float]:
     """
-    Computes multi-factor match score.
-    Returns: (total_score, base_score, urgency_boost)
+    Computes provider ranking score:
+      Base Score = (Rating * 25) - (Distance * 6) - (Price * 0.015)
+      Emergency Boost = (10 - Distance) * 20 (if Urgency == 'Emergency')
     """
     rating = float(provider.get("rating", 0.0))
     distance = float(provider.get("distance_km", 0.0))
@@ -29,23 +25,26 @@ def calculate_match_score(provider, urgency="Normal"):
     total_score = base_score + urgency_boost
     return round(total_score, 2), round(base_score, 2), round(urgency_boost, 2)
 
-def rank_providers(providers, category=None, requested_slot=None, urgency="Normal"):
+def rank_providers(
+    providers: List[Dict[str, Any]],
+    category: Optional[str] = None,
+    requested_slot: Optional[str] = None,
+    urgency: str = "Normal"
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
-    Filters out unavailable / busy technicians (Double-booking shield),
-    computes multi-factor scores, applies dynamic comparison badges,
-    and sorts by:
-      1. Total Score (Descending)
-      2. Active Jobs Count (Ascending - Workload Balancing tie-breaker)
+    Filters unavailable technicians, applies scoring weights, and sorts by:
+      1. Composite match score (descending)
+      2. Active jobs count (ascending workload balancing)
     """
-    available_candidates = []
-    busy_candidates = []
+    available_candidates: List[Dict[str, Any]] = []
+    busy_candidates: List[Dict[str, Any]] = []
+
+    canonical = CATEGORY_ALIASES.get(category, category) if category else None
 
     for p in providers:
-        # Category Filter
-        if category and p.get("category") != category:
+        if canonical and p.get("category") != canonical and p.get("category") != category:
             continue
 
-        # Double-booking guard
         if requested_slot and requested_slot in p.get("busy_slots", []):
             busy_candidates.append(dict(p))
             continue
@@ -61,13 +60,12 @@ def rank_providers(providers, category=None, requested_slot=None, urgency="Norma
     if not available_candidates:
         return [], busy_candidates
 
-    # Compute Comparative Badges dynamically across available candidates
     best_rating = max(c["rating"] for c in available_candidates)
     min_dist = min(c["distance_km"] for c in available_candidates)
     min_price = min(c["price"] for c in available_candidates)
 
     for c in available_candidates:
-        badges = []
+        badges: List[str] = []
         if c["rating"] == best_rating:
             badges.append("Top Rated")
         if c["distance_km"] == min_dist:
@@ -76,7 +74,6 @@ def rank_providers(providers, category=None, requested_slot=None, urgency="Norma
             badges.append("Best Value")
         c["dynamic_badges"] = badges
 
-    # Sort: Primary by score DESC, Secondary by active_jobs_count ASC (Workload Balancing)
     available_candidates.sort(
         key=lambda x: (x["score"], -x.get("active_jobs_count", 0)),
         reverse=True
@@ -84,18 +81,16 @@ def rank_providers(providers, category=None, requested_slot=None, urgency="Norma
 
     return available_candidates, busy_candidates
 
-def auto_assign_emergency(providers, category, requested_slot):
-    """
-    One-Click Emergency Auto-Assignment:
-    Finds the absolute top ranked available technician under Emergency Priority.
-    """
+def auto_assign_emergency(
+    providers: List[Dict[str, Any]],
+    category: str,
+    requested_slot: str
+) -> Optional[Dict[str, Any]]:
+    """Selects the highest scoring available technician for immediate emergency dispatch."""
     available, _ = rank_providers(
         providers=providers,
         category=category,
         requested_slot=requested_slot,
         urgency="Emergency"
     )
-    if available:
-        return available[0]
-    return None
-
+    return available[0] if available else None

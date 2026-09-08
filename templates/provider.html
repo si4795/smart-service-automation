@@ -1,105 +1,105 @@
 {% extends "base.html" %}
 
-{% block title %}Technician Dispatch Operations Dashboard{% endblock %}
+{% block title %}Technician Dispatch Operations Kanban{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
 
     <!-- Header Operations Deck -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="bg-white border border-zinc-200/80 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-bold text-white">Technician Kanban Dispatch Board</h1>
-                <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-semibold">Live Operational Board</span>
+                <h1 class="text-xl font-bold text-zinc-900">Field Operations Kanban</h1>
+                <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-xs font-semibold">Live Board</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1">Manage incoming service tickets, track technician field progression, and advance status through mandatory sequence.</p>
+            <p class="text-xs text-zinc-500 mt-1">Manage active work orders, track technician field transit, and advance sequential status milestones.</p>
         </div>
         <div class="flex items-center gap-3">
-            <div class="bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-mono text-slate-300">
-                Total Jobs: <span class="text-emerald-400 font-bold">{{ total_bookings }}</span>
+            <div class="bg-zinc-50 px-3.5 py-1.5 rounded-lg border border-zinc-200 text-xs font-mono text-zinc-700">
+                Active Tickets: <span class="text-indigo-600 font-bold">{{ total_bookings }}</span>
             </div>
         </div>
     </div>
 
-    <!-- Kanban Grid (5 Workflow Stages) -->
+    <!-- Kanban Grid (5 Sequential Stages) -->
     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {% for st in status_flow %}
         {% set stage_jobs = kanban[st] %}
-        <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between min-h-[500px]">
+        <div class="bg-white border border-zinc-200 rounded-2xl p-4 flex flex-col justify-between min-h-[520px] shadow-xs">
             <div>
                 <!-- Column Header -->
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+                <div class="flex items-center justify-between border-b border-zinc-100 pb-3 mb-3">
                     <div class="flex items-center gap-2">
                         {% if st == 'Requested' %}
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                         {% elif st == 'Accepted' %}
-                        <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                         {% elif st == 'On the Way' %}
-                        <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
                         {% elif st == 'In Progress' %}
-                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
                         {% elif st == 'Completed' %}
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                         {% endif %}
-                        <span class="text-xs font-bold text-slate-200 uppercase tracking-wider">{{ st }}</span>
+                        <span class="text-xs font-bold text-zinc-800 uppercase tracking-wider">{{ st }}</span>
                     </div>
-                    <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-950 text-slate-400 border border-slate-800">{{ stage_jobs|length }}</span>
+                    <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200">{{ stage_jobs|length }}</span>
                 </div>
 
-                <!-- Job Cards in this Stage -->
+                <!-- Tickets List -->
                 <div class="space-y-3">
                     {% for b in stage_jobs %}
-                    <div class="bg-slate-950 border border-slate-800/80 rounded-xl p-3.5 space-y-2.5 hover:border-slate-700 transition shadow-md">
+                    <div class="bg-zinc-50 border border-zinc-200 rounded-xl p-3.5 space-y-2.5 hover:border-zinc-300 transition">
                         <!-- ID & Urgency -->
                         <div class="flex items-center justify-between">
-                            <span class="font-mono text-[11px] font-bold text-slate-400">{{ b.id }}</span>
+                            <span class="font-mono text-[11px] font-semibold text-zinc-500">{{ b.id }}</span>
                             {% if b.urgency == 'Emergency' %}
-                            <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse">Emergency</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-50 text-rose-700 border border-rose-200">Emergency</span>
                             {% else %}
-                            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-800 text-slate-400">Standard</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-zinc-200 text-zinc-700">Standard</span>
                             {% endif %}
                         </div>
 
-                        <!-- Category & Provider -->
+                        <!-- Category & Assigned Tech -->
                         <div>
-                            <div class="text-xs font-bold text-white leading-tight">{{ b.category }}</div>
-                            <div class="text-[11px] text-emerald-400 font-medium mt-0.5">Tech: {{ b.provider_name }}</div>
+                            <div class="text-xs font-bold text-zinc-900 leading-tight">{{ b.category }}</div>
+                            <div class="text-[11px] text-indigo-600 font-medium mt-0.5">{{ b.provider_name }}</div>
                         </div>
 
-                        <!-- Client Info -->
-                        <div class="text-[11px] text-slate-400 space-y-0.5 border-t border-slate-900 pt-2">
-                            <div class="text-slate-300 font-semibold truncate">{{ b.client_name }}</div>
-                            <div class="font-mono text-slate-400">{{ b.client_phone }}</div>
-                            <div class="truncate text-slate-500 text-[10px]">{{ b.client_address }}</div>
-                            <div class="text-[10px] text-slate-400">Slot: <span class="text-slate-300">{{ b.slot }}</span></div>
+                        <!-- Customer Details -->
+                        <div class="text-[11px] text-zinc-600 space-y-0.5 border-t border-zinc-200/60 pt-2">
+                            <div class="font-medium text-zinc-800 truncate">{{ b.client_name }}</div>
+                            <div class="font-mono text-zinc-500 text-[10px]">{{ b.client_phone }}</div>
+                            <div class="truncate text-zinc-500 text-[10px]">{{ b.client_address }}</div>
+                            <div class="text-[10px] text-zinc-600">Slot: <span class="font-mono text-zinc-800">{{ b.slot }}</span></div>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="pt-2 border-t border-slate-900 flex flex-col gap-1.5">
+                        <!-- Action Advancement Button -->
+                        <div class="pt-2 border-t border-zinc-200/60 flex flex-col gap-1.5">
                             {% if st == 'Requested' %}
-                            <button onclick="advanceStage('{{ b.id }}', 'Accepted')" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white transition flex items-center justify-center gap-1 shadow-md shadow-blue-600/20">
+                            <button onclick="advanceStage('{{ b.id }}', 'Accepted')" class="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center justify-center gap-1 shadow-xs">
                                 Accept Ticket →
                             </button>
                             {% elif st == 'Accepted' %}
-                            <button onclick="advanceStage('{{ b.id }}', 'On the Way')" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition flex items-center justify-center gap-1 shadow-md shadow-purple-600/20">
-                                Dispatch Tech →
+                            <button onclick="advanceStage('{{ b.id }}', 'On the Way')" class="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white transition flex items-center justify-center gap-1 shadow-xs">
+                                Dispatch Technician →
                             </button>
                             {% elif st == 'On the Way' %}
-                            <button onclick="advanceStage('{{ b.id }}', 'In Progress')" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center justify-center gap-1 shadow-md shadow-cyan-600/20">
-                                Start Work →
+                            <button onclick="advanceStage('{{ b.id }}', 'In Progress')" class="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white transition flex items-center justify-center gap-1 shadow-xs">
+                                Mark In Progress →
                             </button>
                             {% elif st == 'In Progress' %}
-                            <button onclick="advanceStage('{{ b.id }}', 'Completed')" class="w-full py-1.5 px-2 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20">
-                                Mark Completed & Bill ✓
+                            <button onclick="advanceStage('{{ b.id }}', 'Completed')" class="w-full py-1.5 px-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center gap-1 shadow-xs">
+                                Complete & Generate Bill ✓
                             </button>
                             {% elif st == 'Completed' %}
-                            <a href="{{ url_for('tracking') }}?active_id={{ b.id }}" class="w-full py-1.5 px-2 rounded-lg text-[11px] font-bold text-center bg-slate-900 hover:bg-slate-800 text-emerald-400 border border-emerald-500/30 transition block">
-                                View Invoice & Receipt →
+                            <a href="{{ url_for('tracking') }}?active_id={{ b.id }}" class="w-full py-1.5 px-2 rounded-lg text-[11px] font-semibold text-center bg-white hover:bg-zinc-100 text-emerald-700 border border-emerald-300 transition block">
+                                View Tax Invoice →
                             </a>
                             {% endif %}
 
-                            <a href="{{ url_for('tracking') }}?active_id={{ b.id }}" class="text-[10px] text-center text-slate-500 hover:text-slate-300 py-0.5 transition">
-                                View Timeline Details
+                            <a href="{{ url_for('tracking') }}?active_id={{ b.id }}" class="text-[10px] text-center text-zinc-500 hover:text-zinc-800 py-0.5 transition">
+                                View Pipeline Details
                             </a>
                         </div>
 
@@ -107,15 +107,15 @@
                     {% endfor %}
 
                     {% if not stage_jobs %}
-                    <div class="text-center py-10 text-slate-600 text-xs border border-dashed border-slate-800/80 rounded-xl">
-                        No jobs in {{ st }}
+                    <div class="text-center py-12 text-zinc-400 text-xs border border-dashed border-zinc-200 rounded-xl">
+                        No active items
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <!-- Footer note for stage -->
-            <div class="mt-4 pt-2 border-t border-slate-800/50 text-[10px] text-slate-500 text-center">
+            <!-- Stage Counter -->
+            <div class="mt-4 pt-2 border-t border-zinc-100 text-[10px] text-zinc-400 text-center font-medium">
                 Stage {{ loop.index }} of 5
             </div>
         </div>
@@ -135,17 +135,16 @@
             });
             const data = await res.json();
             if (!res.ok || !data.success) {
-                alert(data.error || "Transition failed.");
+                alert(data.error || "Milestone advancement failed.");
                 return;
             }
-            showToast(`Ticket ${bookingId} transitioned to [${newStatus}]!`);
+            showToast(`Work order ${bookingId} transitioned to [${newStatus}].`);
             setTimeout(() => {
                 window.location.reload();
-            }, 600);
+            }, 350);
         } catch (err) {
-            alert("Error transitioning ticket stage.");
+            alert("Error updating work order milestone.");
         }
     }
 </script>
 {% endblock %}
-
