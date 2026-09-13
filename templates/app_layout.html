@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartServe | Autonomous Home Services Platform{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'Menlo', 'monospace']
+                    },
+                    colors: {
+                        slate: {
+                            850: '#111827',
+                            950: '#070b14'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fadeIn': 'fadeIn 0.25s ease-in-out'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(4px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #invoice-printable, #invoice-printable * { visibility: visible; }
+            #invoice-printable { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; color: #000 !important; background: #fff !important; }
+        }
+        /* Custom scrollbars for dark canvas */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.6); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.6); }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen w-screen overflow-hidden flex flex-col lg:flex-row font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Mobile Top Navigation Header -->
+    <header class="lg:hidden flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-800 shrink-0 z-20">
+        <a href="{{ url_for('dashboard') }}" class="flex items-center space-x-2.5">
+            <div class="h-8 w-8 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white flex items-center justify-center shadow-md">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+            <span class="text-sm font-extrabold text-white tracking-tight">SmartServe</span>
+            <span class="px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Saidpur</span>
+        </a>
+        <button type="button" 
+                onclick="toggleMobileSidebar()" 
+                class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white focus:outline-none">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </header>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebar-backdrop" 
+         onclick="toggleMobileSidebar()" 
+         class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-30 hidden lg:hidden transition-opacity"></div>
+
+    <!-- Persistent Left Sidebar (Drawer on Mobile, Static on Desktop) -->
+    <aside id="app-sidebar" 
+           class="fixed lg:static inset-y-0 left-0 z-40 w-72 h-screen bg-slate-950 border-r border-slate-800/80 flex flex-col justify-between p-5 shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+        
+        <!-- Top Brand Header & User Capsule -->
+        <div class="space-y-6">
+            
+            <!-- Brand Header -->
+            <div class="flex items-center justify-between px-2">
+                <a href="{{ url_for('dashboard') }}" class="flex items-center space-x-3 group">
+                    <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform duration-200">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="text-base font-extrabold tracking-tight text-white group-hover:text-indigo-300 transition">SmartServe</span>
+                            <span class="px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Saidpur</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400 tracking-wide font-medium leading-none mt-0.5">On-Demand Home Services</p>
+                    </div>
+                </a>
+                <button type="button" 
+                        onclick="toggleMobileSidebar()" 
+                        class="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg">
+                    ✕
+                </button>
+            </div>
+
+            <!-- User Status Capsule (Clickable -> /profile) -->
+            {% if current_user %}
+            <a href="{{ url_for('profile') }}" 
+               class="bg-slate-900/90 hover:bg-slate-900 border border-slate-800/90 hover:border-indigo-500/50 rounded-2xl p-3.5 flex items-center gap-3 shadow-inner group transition-all duration-200 block">
+                <div class="flex items-center gap-3 w-full">
+                    <div class="relative shrink-0">
+                        <span class="w-10 h-10 rounded-xl {% if current_user.role == 'technician' %}bg-purple-600{% else %}bg-indigo-600{% endif %} text-white font-extrabold text-xs flex items-center justify-center shadow-md ring-2 ring-indigo-500/30 group-hover:scale-105 transition-transform">
+                            {{ current_user.avatar or 'U' }}
+                        </span>
+                        <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-slate-950 animate-pulse"></span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5">
+                            <h4 class="text-xs font-bold text-white truncate group-hover:text-indigo-300 transition">{{ current_user.name }}</h4>
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase tracking-wider {% if current_user.role == 'technician' %}bg-purple-500/20 text-purple-300 border border-purple-500/30{% else %}bg-indigo-500/20 text-indigo-300 border border-indigo-500/30{% endif %}">
+                                {% if current_user.role == 'technician' %}Certified Partner{% else %}Verified Customer{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endif %}
+
+            <!-- Animated Navigation Stack -->
+            <nav class="space-y-1.5">
+                
+                <!-- Service Explorer -->
+                <a href="{{ url_for('dashboard') }}" 
+                   class="{% if active_tab == 'customer' %}bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25 font-semibold{% else %}text-slate-400 hover:text-white hover:bg-slate-900/80{% endif %} transition-all duration-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 text-xs">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span>Service Explorer</span>
+                </a>
+
+                <!-- Specialists Grid -->
+                <a href="{{ url_for('services_by_category', category='all') }}" 
+                   class="{% if active_tab == 'specialists' %}bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25 font-semibold{% else %}text-slate-400 hover:text-white hover:bg-slate-900/80{% endif %} transition-all duration-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 text-xs">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span>Specialists Grid</span>
+                </a>
+
+                <!-- My Bookings & Tracker -->
+                <a href="{{ url_for('tracking') }}" 
+                   class="{% if active_tab == 'tracking' %}bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25 font-semibold{% else %}text-slate-400 hover:text-white hover:bg-slate-900/80{% endif %} transition-all duration-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 text-xs">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    <span>My Bookings & Tracker</span>
+                </a>
+
+                <!-- Profile & Settings -->
+                <a href="{{ url_for('profile') }}" 
+                   class="{% if active_tab == 'profile' %}bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/25 font-semibold{% else %}text-slate-400 hover:text-white hover:bg-slate-900/80{% endif %} transition-all duration-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 text-xs">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span>Profile & Settings</span>
+                </a>
+
+                <!-- Technician Dispatch Board (Only for technician accounts) -->
+                {% if current_user and current_user.role == 'technician' %}
+                <a href="{{ url_for('provider') }}" 
+                   class="{% if active_tab == 'provider' %}bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25 font-semibold{% else %}text-purple-400 hover:text-white hover:bg-purple-950/40{% endif %} transition-all duration-200 rounded-xl px-3.5 py-2.5 flex items-center gap-3 text-xs">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <span>Operations Kanban</span>
+                </a>
+                {% endif %}
+
+            </nav>
+
+        </div>
+
+        <!-- Bottom Sidebar Utility & Sign Out -->
+        <div class="pt-4 border-t border-slate-800/80 space-y-3">
+
+            <!-- Sign Out Button -->
+            <a href="{{ url_for('logout') }}" 
+               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/40 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span>Sign Out</span>
+            </a>
+
+        </div>
+
+    </aside>
+
+    <!-- ========================================================================= -->
+    <!-- RIGHT MAIN CONTENT CANVAS                                                -->
+    <!-- ========================================================================= -->
+    <main class="flex-1 h-[calc(100vh-57px)] lg:h-screen overflow-y-auto overflow-x-hidden bg-slate-900 text-slate-100 p-4 sm:p-6 lg:p-8 animate-[fadeIn_0.25s_ease-in-out]">
+        <div class="max-w-7xl mx-auto w-full">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 transition-all duration-200 bg-slate-950 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-800 flex items-center gap-3 text-xs">
+        <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[11px]">✓</span>
+        <span id="toast-msg" class="font-medium">Action completed successfully.</span>
+    </div>
+
+    <!-- Global Helpers -->
+    <script>
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-16', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-16', 'opacity-0');
+            }, 3000);
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+
+</body>
+</html>
+
