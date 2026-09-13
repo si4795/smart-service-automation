@@ -1,0 +1,396 @@
+{% extends "app_layout.html" %}
+
+{% block title %}{{ canonical_category }} Specialists | SmartServe{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-[fadeIn_0.25s_ease-in-out]">
+
+    <!-- Page Header & Breadcrumb -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-5">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-400 mb-1.5">
+                <a href="{{ url_for('dashboard') }}" class="hover:text-indigo-400 transition">Dashboard</a>
+                <span class="text-slate-600">/</span>
+                <span class="text-slate-300 font-medium">Specialists Catalog</span>
+                <span class="text-slate-600">/</span>
+                <span class="text-indigo-400 font-semibold">{{ canonical_category }}</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                <span>{{ canonical_category }} Specialists</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    {{ total_count }} Verified Pros
+                </span>
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+                Background-verified trade professionals serving Saidpur Cantonment & Municipal sectors.
+            </p>
+        </div>
+
+        <!-- Quick Emergency Auto-Assign CTA -->
+        <div class="flex items-center gap-2">
+            <form action="{{ url_for('auto_assign') }}" method="POST">
+                <input type="hidden" name="category" value="{{ canonical_category if canonical_category != 'All Categories' else 'Electrical Engineering' }}">
+                <input type="hidden" name="slot_date" value="{{ selected_date }}">
+                <input type="hidden" name="slot_time" value="{{ selected_time }}">
+                <input type="hidden" name="urgency" value="Emergency">
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold transition shadow-lg shadow-rose-600/25 flex items-center gap-2 group">
+                    <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                    <span>1-Click Urgent Dispatch</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Switcher Pill Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <a href="{{ url_for('services_by_category', category='all', date=selected_date, time=selected_time, urgency=urgency) }}" 
+           class="px-3.5 py-2 rounded-xl text-xs font-semibold transition shrink-0 flex items-center gap-1.5 {% if category == 'all' %}bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/25{% else %}bg-slate-950/80 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+            <span>✨</span>
+            <span>All Categories</span>
+        </a>
+        {% for cat in categories_metadata %}
+        <a href="{{ url_for('services_by_category', category=cat.slug, date=selected_date, time=selected_time, urgency=urgency) }}" 
+           class="px-3.5 py-2 rounded-xl text-xs font-semibold transition shrink-0 flex items-center gap-1.5 {% if category == cat.slug %}bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/25{% else %}bg-slate-950/80 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+            <span>{{ cat.icon }}</span>
+            <span>{{ cat.title }}</span>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Top Horizontal Filter & Schedule Bar -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4">
+        <form method="GET" action="{{ url_for('services_by_category', category=category) }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
+            
+            <!-- Date Picker -->
+            <div class="lg:col-span-3 space-y-1.5">
+                <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Appointment Date</label>
+                <input type="date" name="date" value="{{ selected_date }}" 
+                       class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+            </div>
+
+            <!-- 1-Hour Time Windows -->
+            <div class="lg:col-span-3 space-y-1.5">
+                <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">1-Hour Time Window</label>
+                <select name="time" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                    {% for t in ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"] %}
+                    <option value="{{ t }}" {% if selected_time == t %}selected{% endif %}>{{ t }} (1-Hour Window)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Urgent Dispatch Toggle -->
+            <div class="lg:col-span-3 space-y-1.5">
+                <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Service Priority</label>
+                <select name="urgency" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs font-medium text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                    <option value="Normal" {% if urgency == 'Normal' %}selected{% endif %}>Standard Scheduled (Normal)</option>
+                    <option value="Emergency" {% if urgency == 'Emergency' %}selected{% endif %}>Urgent Priority (Emergency Dispatch)</option>
+                </select>
+            </div>
+
+            <!-- Submit Filter Button -->
+            <div class="lg:col-span-3">
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs transition shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                    </svg>
+                    <span>Check Availability</span>
+                </button>
+            </div>
+
+        </form>
+
+        <!-- Current Active Filter Summary -->
+        <div class="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Active Slot: <strong class="text-white font-semibold">{{ selected_slot }}</strong></span>
+                <span class="text-slate-600">•</span>
+                <span>Priority: <strong class="{% if urgency == 'Emergency' %}text-rose-400{% else %}text-white{% endif %} font-semibold">{{ urgency }}</strong></span>
+            </div>
+            <div class="text-[11px] text-slate-500">
+                Double-booking calendar protection enforced automatically.
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Specialists Section (3-Column Desktop Grid) -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <span>Available Specialists</span>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                    {{ providers|length }} Ready
+                </span>
+            </h2>
+            <span class="text-xs text-slate-400">Ranked by Proximity, Rating & Workload</span>
+        </div>
+
+        {% if not providers %}
+        <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-10 text-center space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto text-xl font-bold">
+                ⚠️
+            </div>
+            <h3 class="font-bold text-white text-base">No Specialists Available for this Slot</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto">
+                All specialists in this category are booked for {{ selected_slot }}. Try selecting an earlier or later 1-hour time window.
+            </p>
+        </div>
+        {% else %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for p in providers %}
+            <div class="bg-slate-950/80 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-5 flex flex-col justify-between shadow-xl hover:shadow-indigo-500/10 transition-all duration-200 group">
+                <div class="space-y-4">
+                    
+                    <!-- Header: Avatar, Badge & Verified Status -->
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-3 min-w-0">
+                            <img src="{{ p.avatar_url }}" alt="{{ p.name }}" class="w-14 h-14 rounded-2xl object-cover border border-slate-700/80 shrink-0">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5">
+                                    <h3 class="font-bold text-white text-sm truncate group-hover:text-indigo-300 transition">{{ p.name }}</h3>
+                                    <span class="text-indigo-400 shrink-0" title="Verified Trade License">
+                                        <svg class="w-4 h-4 fill-indigo-400" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">{{ p.title }}</p>
+                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-900 border border-slate-800 text-slate-300 mt-1">
+                                    {{ p.category }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Recognition Badge -->
+                        {% if p.badge %}
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 {% if p.badge == 'Top Rated' %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% elif p.badge == 'Fastest Arrival' %}bg-indigo-500/10 text-indigo-400 border border-indigo-500/20{% else %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% endif %}">
+                            {{ p.badge }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Specialty Description -->
+                    <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                        {{ p.specialty or p.bio }}
+                    </p>
+
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-slate-900/90 rounded-2xl p-2.5 border border-slate-800">
+                            <div class="text-[10px] text-slate-400 font-medium">Rating</div>
+                            <div class="font-bold text-amber-400 text-xs mt-0.5">★ {{ p.rating }}</div>
+                        </div>
+                        <div class="bg-slate-900/90 rounded-2xl p-2.5 border border-slate-800">
+                            <div class="text-[10px] text-slate-400 font-medium">Completed</div>
+                            <div class="font-bold text-white text-xs mt-0.5">{{ p.completed_tasks }} tasks</div>
+                        </div>
+                        <div class="bg-slate-900/90 rounded-2xl p-2.5 border border-slate-800">
+                            <div class="text-[10px] text-slate-400 font-medium">Base Rate</div>
+                            <div class="font-bold text-indigo-400 text-xs mt-0.5">৳{{ "%.0f"|format(p.price) }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Proximity Radius -->
+                    <div class="flex items-center justify-between text-xs text-slate-400 pt-1">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span>{{ p.distance_km }} km away</span>
+                        </span>
+                        <span class="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Slot Available
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- Action Controls -->
+                <div class="mt-4 pt-3.5 border-t border-slate-800 flex items-center gap-2">
+                    <!-- Portfolio & Video Trigger -->
+                    <button type="button" 
+                            onclick='openPortfolioModal({{ p|tojson|safe }})'
+                            class="flex-1 py-2 px-3 rounded-xl border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Portfolio & Video</span>
+                    </button>
+
+                    <!-- Select Specialist (Direct to Step 3 Checkout) -->
+                    <a href="{{ url_for('checkout_view', technician_id=p.id, date=selected_date, time=selected_time, urgency=urgency) }}" 
+                       class="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold transition shadow-md shadow-indigo-500/25 flex items-center justify-center gap-1">
+                        <span>Select Pro</span>
+                        <span>→</span>
+                    </a>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Busy Specialists (Calendar Collision Shield) -->
+    {% if busy_providers %}
+    <div class="space-y-4 pt-4 border-t border-slate-800">
+        <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                <span>Booked Specialists for this Slot</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                    {{ busy_providers|length }} Occupied
+                </span>
+            </h3>
+            <span class="text-xs text-slate-500">Protected against double-booking</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-75">
+            {% for b in busy_providers %}
+            <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <img src="{{ b.avatar_url }}" alt="{{ b.name }}" class="w-10 h-10 rounded-xl object-cover grayscale shrink-0 border border-slate-800">
+                    <div class="min-w-0">
+                        <h4 class="font-bold text-slate-200 text-xs truncate">{{ b.name }}</h4>
+                        <p class="text-[11px] text-slate-400 truncate">{{ b.title }}</p>
+                        <span class="text-[10px] text-rose-400 font-semibold flex items-center gap-1 mt-0.5">
+                            <span>●</span> Booked for {{ selected_slot }}
+                        </span>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('checkout_view', technician_id=b.id, date=selected_date, time='15:00', urgency=urgency) }}" 
+                   class="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:text-white text-[11px] font-medium transition shrink-0">
+                    Change Slot →
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Interactive Portfolio & Field Video Modal -->
+<div id="portfolio-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-700 animate-[fadeIn_0.2s_ease-in-out]">
+        
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-slate-900/95 backdrop-blur-md px-6 py-4 border-b border-slate-800 flex items-center justify-between z-10">
+            <div>
+                <h3 id="modal-tech-name" class="font-black text-white text-base">Specialist Portfolio</h3>
+                <p id="modal-tech-title" class="text-xs text-slate-400">Field verification & trade showcase</p>
+            </div>
+            <button type="button" onclick="closePortfolioModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition font-bold">
+                ✕
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 space-y-6">
+            
+            <!-- Bio & Certification -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Professional Bio</h4>
+                <p id="modal-tech-bio" class="text-xs text-slate-300 leading-relaxed bg-slate-950/70 p-4 rounded-2xl border border-slate-800"></p>
+            </div>
+
+            <!-- Field Video Showcase -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Field Inspection Demo</h4>
+                    <span class="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Verified Field Work</span>
+                </div>
+                <div class="rounded-2xl overflow-hidden border border-slate-800 bg-black aspect-video flex items-center justify-center">
+                    <video id="modal-tech-video" controls class="w-full h-full object-cover">
+                        <source id="modal-video-source" src="" type="video/mp4">
+                        Your browser does not support HTML5 video.
+                    </video>
+                </div>
+            </div>
+
+            <!-- Repair Inspection Photos Gallery -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Recent Job Inspection Photos</h4>
+                <div id="modal-photos-gallery" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="sticky bottom-0 bg-slate-950/95 backdrop-blur-md px-6 py-4 border-t border-slate-800 flex items-center justify-between">
+            <div class="text-xs text-slate-400">
+                Hourly rate starting at <strong id="modal-price" class="text-white font-bold"></strong>
+            </div>
+            <a id="modal-book-cta" href="#" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-500/25">
+                Continue to Checkout →
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function openPortfolioModal(tech) {
+        document.getElementById('modal-tech-name').innerText = tech.name || 'Specialist Portfolio';
+        document.getElementById('modal-tech-title').innerText = `${tech.title || ''} • ${tech.category || ''}`;
+        document.getElementById('modal-tech-bio').innerText = tech.bio || tech.specialty || 'Certified trade technician with verified completion record in Saidpur.';
+        document.getElementById('modal-price').innerText = `৳${Math.round(tech.price || tech.base_price || 500)}`;
+
+        // Set Video
+        const video = document.getElementById('modal-tech-video');
+        const videoSrc = document.getElementById('modal-video-source');
+        videoSrc.src = tech.portfolio_video || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+        video.load();
+
+        // Photos Gallery
+        const gallery = document.getElementById('modal-photos-gallery');
+        gallery.innerHTML = '';
+        const photos = tech.portfolio_photos || [
+            "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80",
+            "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80"
+        ];
+        photos.forEach((src, idx) => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = `Inspection Photo ${idx + 1}`;
+            img.className = 'w-full h-24 sm:h-28 object-cover rounded-xl border border-slate-700 hover:opacity-90 transition';
+            gallery.appendChild(img);
+        });
+
+        // Checkout Button Link
+        const cta = document.getElementById('modal-book-cta');
+        cta.href = `/checkout/${tech.id}?date={{ selected_date }}&time={{ selected_time }}&urgency={{ urgency }}`;
+
+        const modal = document.getElementById('portfolio-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closePortfolioModal() {
+        const modal = document.getElementById('portfolio-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        const video = document.getElementById('modal-tech-video');
+        video.pause();
+    }
+
+    // Close on background click
+    document.getElementById('portfolio-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePortfolioModal();
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePortfolioModal();
+        }
+    });
+</script>
+{% endblock %}
