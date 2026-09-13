@@ -1,0 +1,218 @@
+{% extends "app_layout.html" %}
+
+{% block title %}Service Explorer | SmartServe{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-[fadeIn_0.25s_ease-in-out]">
+
+    <!-- Top Canvas Banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-indigo-400 font-semibold mb-1">
+                <span>Autonomous Service Discovery</span>
+                <span class="text-slate-600">•</span>
+                <span class="text-emerald-400 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Saidpur Cantonment Fleet Active
+                </span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Home Service Explorer</h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">Select a trade category below or configure your scheduled appointment slot.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('services_by_category', category='all') }}" 
+               class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-500/25 flex items-center gap-2">
+                <span>⚡ View All 18 Specialists</span>
+                <span>→</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Schedule Bar (Required by test suite) -->
+    <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                </svg>
+                <h2 class="text-xs font-extrabold text-white uppercase tracking-wider">Filter & Schedule</h2>
+            </div>
+            <span class="text-[11px] text-slate-400">Atomic Collision Shield Active</span>
+        </div>
+
+        <form method="GET" action="{{ url_for('dashboard') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
+            <div class="lg:col-span-3 space-y-1.5">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Trade Discipline</label>
+                <select name="category" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    {% for c in categories %}
+                    <option value="{{ c }}" {% if selected_category == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="lg:col-span-3 space-y-1.5">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Appointment Date</label>
+                <input type="date" name="date" value="{{ selected_date }}" 
+                       class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <div class="lg:col-span-3 space-y-1.5">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">1-Hour Time Window</label>
+                <select name="time" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                    {% for t in ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"] %}
+                    <option value="{{ t }}" {% if selected_time == t %}selected{% endif %}>{{ t }} (1-Hour Window)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="lg:col-span-3 flex items-center gap-2">
+                <div class="flex-1 space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Priority</label>
+                    <select name="urgency" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="Normal" {% if urgency == 'Normal' %}selected{% endif %}>Normal</option>
+                        <option value="Emergency" {% if urgency == 'Emergency' %}selected{% endif %}>Urgent Dispatch</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-transparent select-none uppercase">Action</label>
+                    <button type="submit" class="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-md shadow-indigo-600/30">
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- 6 Vibrant Interactive Category Cards -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                <span>Select Trade Discipline</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">6 Categories</span>
+            </h2>
+            <span class="text-xs text-slate-400">Click a category to view candidate rankings</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for cat in global_categories_meta %}
+            <a href="{{ url_for('services_by_category', category=cat.slug, date=selected_date, time=selected_time, urgency=urgency) }}" 
+               class="group relative bg-slate-950/80 border border-slate-800/90 hover:border-indigo-500/60 rounded-3xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 flex flex-col justify-between space-y-4 overflow-hidden">
+                
+                <div class="absolute -top-12 -right-12 w-28 h-28 bg-indigo-600/15 rounded-full filter blur-xl group-hover:bg-indigo-600/30 transition-all duration-300 pointer-events-none"></div>
+
+                <div>
+                    <div class="flex items-center justify-between">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-xl group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition duration-200">
+                            {% if cat.slug == 'electrical' %}
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            {% elif cat.slug == 'plumbing' %}
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            {% elif cat.slug == 'hvac' %}
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            {% elif cat.slug == 'appliances' %}
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            {% elif cat.slug == 'carpentry' %}
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+                            </svg>
+                            {% else %}
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            {% endif %}
+                        </div>
+
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            ⚡ &lt; 15m ETA
+                        </span>
+                    </div>
+
+                    <h3 class="font-bold text-white text-base mt-4 group-hover:text-indigo-300 transition">{{ cat.title }}</h3>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">{{ cat.desc }}</p>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                    <span class="text-slate-400">Starting from <strong class="text-white font-bold">{{ cat.base_rate }}</strong></span>
+                    <span class="text-indigo-400 font-semibold group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        <span>Browse Pros</span>
+                        <span>→</span>
+                    </span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Available Specialists Section (Required by test suite) -->
+    <div class="space-y-4 pt-4 border-t border-slate-800/80">
+        <div class="flex items-center justify-between">
+            <h2 class="text-base font-extrabold text-white tracking-tight flex items-center gap-2.5">
+                <span>Available Specialists</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    {{ providers|length }} Ready
+                </span>
+            </h2>
+            <span class="text-xs text-slate-400">Ranked for: {{ selected_slot }}</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {% for p in providers[:6] %}
+            <div class="bg-slate-950/80 border border-slate-800/90 rounded-3xl p-5 flex flex-col justify-between shadow-lg space-y-4 hover:border-indigo-500/50 transition">
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3.5">
+                        <img src="{{ p.avatar_url }}" alt="{{ p.name }}" class="w-14 h-14 rounded-2xl object-cover border border-slate-700 shrink-0">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5">
+                                <h4 class="font-bold text-white text-sm truncate">{{ p.name }}</h4>
+                                <span class="text-indigo-400" title="Verified Trade Specialist">
+                                    <svg class="w-4 h-4 fill-indigo-400" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 truncate">{{ p.title }}</p>
+                            <span class="inline-block px-2 py-0.2 rounded text-[10px] font-bold bg-slate-900 text-slate-300 mt-1 border border-slate-800">
+                                {{ p.category }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-slate-900 rounded-xl p-2 border border-slate-800">
+                            <div class="text-[10px] text-slate-500 font-medium">Rating</div>
+                            <div class="font-bold text-white text-xs mt-0.5">★ {{ p.rating }}</div>
+                        </div>
+                        <div class="bg-slate-900 rounded-xl p-2 border border-slate-800">
+                            <div class="text-[10px] text-slate-500 font-medium">Tasks</div>
+                            <div class="font-bold text-white text-xs mt-0.5">{{ p.completed_tasks }}</div>
+                        </div>
+                        <div class="bg-slate-900 rounded-xl p-2 border border-slate-800">
+                            <div class="text-[10px] text-slate-500 font-medium">Base</div>
+                            <div class="font-bold text-white text-xs mt-0.5">৳{{ "%.0f"|format(p.price) }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                    <span class="text-slate-400 text-[11px]">{{ p.distance_km }} km away</span>
+                    <a href="{{ url_for('checkout_view', technician_id=p.id, date=selected_date, time=selected_time, urgency=urgency) }}" 
+                       class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition shadow-xs">
+                        Select Pro →
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
