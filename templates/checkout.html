@@ -1,0 +1,296 @@
+{% extends "app_layout.html" %}
+
+{% block title %}Confirm Booking with {{ technician.name }} | SmartServe{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-[fadeIn_0.25s_ease-in-out]">
+
+    <!-- Stepper Navigation Header -->
+    <div class="border-b border-slate-800/80 pb-5">
+        <div class="flex items-center gap-2 text-xs text-slate-400 mb-2">
+            <a href="{{ url_for('dashboard') }}" class="hover:text-indigo-400 transition">Dashboard</a>
+            <span class="text-slate-600">/</span>
+            <a href="{{ url_for('services_by_category', category='all') }}" class="hover:text-indigo-400 transition">Specialists</a>
+            <span class="text-slate-600">/</span>
+            <span class="text-white font-medium">Checkout & Schedule</span>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Confirm & Schedule Appointment</h1>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">Review specialist details, specify your service location, and reserve your slot.</p>
+            </div>
+            
+            <!-- Step Progress Indicator -->
+            <div class="hidden sm:flex items-center gap-2 text-xs font-semibold">
+                <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-[10px] font-bold">✓</span>
+                <span class="text-slate-400">Specialist</span>
+                <span class="text-slate-600">→</span>
+                <span class="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center text-[10px] font-bold shadow-md shadow-indigo-500/30">3</span>
+                <span class="text-white font-bold">Schedule & Review</span>
+                <span class="text-slate-600">→</span>
+                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-[10px]">4</span>
+                <span class="text-slate-500">Live Track</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collision Warning Banner if Slot is Busy -->
+    {% if is_busy or error %}
+    <div class="bg-rose-500/10 border border-rose-500/20 rounded-3xl p-5 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center shrink-0 text-lg font-bold">
+            ⚠️
+        </div>
+        <div class="space-y-1 text-xs text-rose-300 flex-1">
+            <h3 class="font-bold text-sm text-rose-200">Scheduling Conflict Detected</h3>
+            <p class="leading-relaxed">{{ error or (technician.name ~ ' has a prior confirmed booking for ' ~ selected_slot ~ '. Please pick an alternate time window below to proceed.') }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Checkout Two-Column Layout -->
+    <form action="{{ url_for('checkout_post') }}" method="POST" id="checkout-form">
+        <input type="hidden" name="provider_id" value="{{ technician.id }}">
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Customer Details & Service Address Form -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Service Location & Contact Card -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                        <h2 class="text-sm font-extrabold text-white flex items-center gap-2">
+                            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span>Customer & Location Information</span>
+                        </h2>
+                        {% if user %}
+                        <span class="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                            Signed in as {{ user.name }}
+                        </span>
+                        {% else %}
+                        <a href="{{ url_for('login', next=request.url) }}" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium">
+                            Sign In for 1-Click Fill →
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Customer Name -->
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Full Name</label>
+                            <input type="text" name="client_name" required 
+                                   value="{{ (user.name if user and user.name else 'Suaib Islam') }}" 
+                                   class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition font-medium">
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Phone Number</label>
+                            <input type="tel" name="client_phone" required 
+                                   value="{{ (user.phone if user and user.phone else '+880 1711-223344') }}" 
+                                   class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition font-medium">
+                        </div>
+                    </div>
+
+                    <!-- Service Address -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Service Address & Landmark</label>
+                        <textarea name="client_address" rows="2" required 
+                                  class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3 text-xs text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition font-medium">{{ (user.address if user and user.address else 'Quarter 12/B, Cantonment Housing, Saidpur') }}</textarea>
+                        <p class="text-[11px] text-slate-500">Our technician will navigate directly to this address upon dispatch.</p>
+                    </div>
+
+                    <!-- Special Instructions / Notes -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Problem Description & Special Notes (Optional)</label>
+                        <textarea name="notes" rows="3" placeholder="Describe the issue (e.g., Short-circuit in master bedroom sub-panel, please bring voltage meter)"
+                                  class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3 text-xs text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"></textarea>
+                    </div>
+                </div>
+
+                <!-- Appointment Slot & Urgency Adjustment Card -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-4">
+                    <h2 class="text-sm font-extrabold text-white flex items-center gap-2 border-b border-slate-800/80 pb-4">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Appointment Time & Priority</span>
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Date</label>
+                            <input type="date" name="slot_date" id="slot-date-input" value="{{ selected_date }}" 
+                                   onchange="updateCheckoutPricing()"
+                                   class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-medium text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Time Window</label>
+                            <select name="slot_time" id="slot-time-input" onchange="updateCheckoutPricing()"
+                                    class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-medium text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                {% for t in ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"] %}
+                                <option value="{{ t }}" {% if selected_time == t %}selected{% endif %}>{{ t }} (1-Hour)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider">Priority</label>
+                            <select name="urgency" id="urgency-input" onchange="updateCheckoutPricing()"
+                                    class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs font-medium text-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="Normal" {% if urgency == 'Normal' %}selected{% endif %}>Standard (Normal)</option>
+                                <option value="Emergency" {% if urgency == 'Emergency' %}selected{% endif %}>Urgent Dispatch (+৳100)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Order Summary Card -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <div class="bg-slate-950/80 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl sticky top-20 space-y-6">
+                    
+                    <div class="border-b border-slate-800/80 pb-4">
+                        <h2 class="text-base font-black text-white">Order Summary</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Transparent quote with zero hidden surcharges</p>
+                    </div>
+
+                    <!-- Selected Specialist Mini Profile -->
+                    <div class="flex items-start gap-3.5 bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
+                        <img src="{{ technician.avatar_url }}" alt="{{ technician.name }}" class="w-14 h-14 rounded-2xl object-cover border border-slate-700 shrink-0">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5">
+                                <h3 class="font-bold text-white text-sm truncate">{{ technician.name }}</h3>
+                                <span class="text-indigo-400" title="Verified Specialist">
+                                    <svg class="w-3.5 h-3.5 fill-indigo-400" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 truncate">{{ technician.title }}</p>
+                            <div class="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
+                                <span class="text-amber-400 font-bold">★ {{ technician.rating }}</span>
+                                <span>•</span>
+                                <span>{{ technician.distance_km }} km away</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slot Summary Pill -->
+                    <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-3.5 text-xs text-indigo-300 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                            <span class="font-medium text-slate-300">Appointment:</span>
+                        </div>
+                        <span id="summary-slot-display" class="font-bold text-white">{{ selected_slot }}</span>
+                    </div>
+
+                    <!-- Line Item Costs -->
+                    <div class="space-y-2.5 text-xs text-slate-400 border-b border-slate-800/80 pb-4">
+                        <div class="flex items-center justify-between">
+                            <span>Specialist Base Inspection</span>
+                            <span class="font-semibold text-white" id="base-price-display">৳{{ "%.2f"|format(pricing.base_price) }}</span>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span>Platform Dispatch & Safety Fee</span>
+                            <span class="font-semibold text-white">৳50.00</span>
+                        </div>
+
+                        <div class="flex items-center justify-between" id="emergency-fee-row" {% if pricing.emergency_fee == 0 %}style="display:none;"{% endif %}>
+                            <span class="text-rose-400 font-medium">Urgent Dispatch Surcharge</span>
+                            <span class="font-bold text-rose-400" id="emergency-fee-display">+৳100.00</span>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                            <span>Subtotal</span>
+                            <span class="font-semibold text-white" id="subtotal-display">৳{{ "%.2f"|format(pricing.subtotal) }}</span>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span>Government VAT (5%)</span>
+                            <span class="font-semibold text-white" id="vat-display">৳{{ "%.2f"|format(pricing.vat_amount) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Grand Total -->
+                    <div class="flex items-baseline justify-between pt-1">
+                        <div>
+                            <div class="text-sm font-black text-white">Total Payable</div>
+                            <div class="text-[11px] text-slate-500">Payable after job completion</div>
+                        </div>
+                        <div class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300" id="grand-total-display">
+                            ৳{{ "%.2f"|format(pricing.grand_total) }}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="confirm-booking-btn" 
+                            class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-sm transition shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span>Confirm & Book Service</span>
+                    </button>
+
+                    <!-- Trust Points -->
+                    <div class="space-y-1.5 text-[11px] text-slate-500 pt-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Free cancellation prior to technician departure.</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Direct cash or bKash payment upon task inspection.</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Automated digital tax invoice issued on job finish.</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </form>
+
+</div>
+
+<script>
+    const basePrice = {{ pricing.base_price }};
+    const platformFee = 50.0;
+
+    function updateCheckoutPricing() {
+        const date = document.getElementById('slot-date-input').value;
+        const time = document.getElementById('slot-time-input').value;
+        const urgency = document.getElementById('urgency-input').value;
+
+        document.getElementById('summary-slot-display').innerText = `${date} ${time}`;
+
+        const isEmergency = urgency.toLowerCase() === 'emergency';
+        const emergencyFee = isEmergency ? 100.0 : 0.0;
+
+        const subtotal = basePrice + platformFee + emergencyFee;
+        const vat = Math.round(subtotal * 0.05 * 100) / 100;
+        const grandTotal = Math.round((subtotal + vat) * 100) / 100;
+
+        const feeRow = document.getElementById('emergency-fee-row');
+        if (isEmergency) {
+            feeRow.style.display = 'flex';
+        } else {
+            feeRow.style.display = 'none';
+        }
+
+        document.getElementById('subtotal-display').innerText = `৳${subtotal.toFixed(2)}`;
+        document.getElementById('vat-display').innerText = `৳${vat.toFixed(2)}`;
+        document.getElementById('grand-total-display').innerText = `৳${grandTotal.toFixed(2)}`;
+    }
+</script>
+{% endblock %}
